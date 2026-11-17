@@ -78,6 +78,8 @@ interface Run {
   started: number;
   seq: number;
   feedback: string;
+  lastDetails: Record<string, string>; // last outcome details per stage, e.g. review findings
+  stoppedAt: string | null;
   metrics: StageMetric[];
   events: string[];
   tamper: string[];
@@ -163,7 +165,8 @@ async function execStage(run: Run, stage: string): Promise<string> {
   if (isAi) {
     const limit = config.limits[counterKey];
     if (limit && attempt > limit) {
-      throw new LimitStop(`лимит попыток этапа «${stage}» исчерпан (${limit}). Последняя проблема:\n${truncate(run.feedback, 3000)}`);
+      run.stoppedAt = stage;
+      throw new LimitStop(`лимит попыток этапа «${stage}» исчерпан (${limit}). Последний результат этапа «${stage}»:\n${truncate(run.lastDetails[stage] ?? run.feedback, 3000)}`);
     }
     task.data.rounds[counterKey] = attempt;
   }
@@ -198,6 +201,7 @@ async function execStage(run: Run, stage: string): Promise<string> {
         feedback: run.feedback,
         maxTurns: config.max_turns,
         reviewPending: task.data.review_pending ?? null,
+        previousReview: run.lastDetails.review ?? task.data.last_review ?? '',
         runEvents: runEventsText(run),
         onProgress: (agent, line) => fs.appendFileSync(abs(`${run.dir}/live.log`), `    · ${agent}: ${line}\n`),
       },
@@ -242,6 +246,8 @@ async function execStage(run: Run, stage: string): Promise<string> {
   journal(task, `${stage} → ${outcome} (${fmtMs(metric.durationMs)})`);
   writeMetrics(run);
   run.feedback = details;
+  run.lastDetails[stage] = details;
+  if (stage === 'review') task.data.last_review = outcome === 'fail' ? truncate(details, 6000) : undefined;
   return outcome;
 }
 
@@ -271,7 +277,7 @@ async function runPipeline(task: Task, opts: { from?: string; single?: boolean; 
   const id = nextRunId(task);
   const run: Run = {
     id, dir: `runs/${id}`, task, pipeline, trigger: opts.trigger ?? 'auto', started: Date.now(), seq: 0, feedback: '',
-    metrics: [], events: [], tamper: [], appliedKb: [], decisions: [], disputes: [], stopReason: null, learned: false, kbTouched: [],
+    metrics: [], events: [], tamper: [], appliedKb: [], decisions: [], disputes: [], stopReason: null, learned: false, kbTouched: [], lastDetails: {}, stoppedAt: null,
   };
   fs.mkdirSync(abs(run.dir), { recursive: true });
   commit(`factory: snapshot before ${id}`);
@@ -297,6 +303,7 @@ async function runPipeline(task: Task, opts: { from?: string; single?: boolean; 
   } catch (e) {
     run.stopReason = e instanceof Error ? e.message : String(e);
     task.data.status = 'stopped';
+    task.data.stopped_at = run.stoppedAt ?? stage;
     log(run, `⛔ Остановка: ${run.stopReason.split('\n')[0]}`);
     journal(task, `⛔ остановлено: ${run.stopReason.split('\n')[0]}`);
   }
@@ -307,6 +314,11 @@ async function runPipeline(task: Task, opts: { from?: string; single?: boolean; 
     } catch (e) {
       log(run, `ретроспектива не выполнена: ${String(e)}`);
     }
+  }
+  if (run.stopReason) {
+    // The retrospective ran after the stop; the task stays stopped at the stage that failed.
+    task.data.status = 'stopped';
+    task.data.phase = task.data.stopped_at ?? task.data.phase;
   }
   saveTask(task);
   writeReport(run);
@@ -468,8 +480,9 @@ async function main(): Promise<void> {
     case 'resume': {
       const task = findTask(args[0]);
       if (task.data.status === 'stopped') {
-        // A fresh resume gets fresh attempt counters for the stage it restarts.
+        // A fresh resume restarts from the stage that hit the limit, with fresh attempt counters.
         task.data.rounds = {};
+        task.data.phase = task.data.stopped_at ?? task.data.phase;
       }
       await runPipeline(task, { from: task.data.phase, until });
       break;

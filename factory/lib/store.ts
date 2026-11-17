@@ -21,6 +21,8 @@ export interface TaskData {
   decision?: { id: string; value: string };
   review_pending?: string[];
   needs_human?: string[];
+  stopped_at?: string;
+  last_review?: string;
 }
 
 export interface Task {
@@ -194,7 +196,7 @@ export function upsertKb(items: KbUpsert[], run: string): string[] {
       n++;
       const id = `KB-${String(n).padStart(3, '0')}`;
       const data: KbFront = { id, title: it.title, stages: it.stages, created_by_run: run, updated_by_runs: [] };
-      writeText(`kb/${id}-${slugify(it.title) || 'lesson'}.md`, stringifyFrontmatter({ data, body: `\n${body}` }));
+      writeText(`kb/${id}-${slugify(translit(it.title)) || 'lesson'}.md`, stringifyFrontmatter({ data, body: `\n${body}` }));
       touched.push(id);
     }
   }
@@ -203,4 +205,11 @@ export function upsertKb(items: KbUpsert[], run: string): string[] {
 
 export function removeFile(p: string): void {
   fs.rmSync(abs(p), { force: true, recursive: true });
+}
+
+const RU: Record<string, string> = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+
+/** Latin transliteration for readable file names. */
+export function translit(s: string): string {
+  return [...s.toLowerCase()].map((c) => RU[c] ?? c).join('');
 }

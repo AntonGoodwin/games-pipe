@@ -15,6 +15,7 @@ export interface AiCtx {
   feedback: string; // from the previous stage (failures, findings, dispute answer)
   maxTurns: Record<string, number>;
   reviewPending: string[] | null;
+  previousReview: string; // findings of the previous review round, so reviewers do not move the goalposts
   runEvents: string; // condensed log for the librarian
   onProgress: (agent: string, line: string) => void;
 }
@@ -243,7 +244,10 @@ export async function runAiStage(ctx: AiCtx, spec: string): Promise<AiResult> {
   if (agent === 'reviewers') {
     const all = ['reviewer-rules', 'reviewer-integrity'];
     const pending = ctx.reviewPending?.length ? ctx.reviewPending : all;
-    const results = await Promise.all(pending.map((a) => call(ctx, a, '', 'reviewer')));
+    const repeat = ctx.previousReview
+      ? `## Повторный круг ревью\n\nЗамечания прошлого круга:\n\n${ctx.previousReview}\n\nПроверь, что прежние блокирующие замечания исправлены, и нет регрессий. Новое блокирующее замечание допустимо только если его вызвала правка или оно нарушает спецификацию, контракт платформы или конвенции. Всё остальное новое — minor.\n\n## Вход от предыдущего этапа\n\n${ctx.feedback}`
+      : `## Что сделать\n\nПроведи ревью изменений по своей роли. Найди все блокирующие проблемы за один проход.\n\n## Вход от предыдущего этапа\n\n${ctx.feedback}`;
+    const results = await Promise.all(pending.map((a) => call(ctx, a, '', 'reviewer', repeat)));
     const failed: string[] = [];
     const lines: string[] = [];
     let n = 0;
