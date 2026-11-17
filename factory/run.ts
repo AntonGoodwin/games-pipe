@@ -212,7 +212,7 @@ async function execStage(run: Run, stage: string): Promise<string> {
     outcome = r.outcome;
     details = r.details + (reverted.length ? `\n\nОткатаны записи вне разрешённых путей: ${reverted.join(', ')}` : '');
     metric.calls = r.calls.map((c: AiCall) => ({ agent: c.agent, ok: c.ok, ...c.usage }));
-    if (r.appliedKb.length) run.appliedKb.push({ stage, ids: r.appliedKb });
+    if (r.appliedKb.length) run.appliedKb.push({ stage, ids: [...new Set(r.appliedKb)] });
     if (r.decisions.length) {
       const ids = addDecisions(task.data.scope, r.decisions, { task, stage, run: run.id });
       run.decisions.push(...ids);
@@ -418,7 +418,7 @@ function writeSummary(): void {
     const iters = Object.entries(m.byStage).filter(([s]) => ['spec', 'spec_update', 'tests', 'tests_update', 'implement', 'review', 'docs', 'dispute'].includes(s)).map(([s, v]) => `${s}×${v.iterations}`).join(' ');
     rows.push(`| [[runs/${d}/report\\|${d}]] | ${m.task} | ${m.pipeline} | ${m.trigger} | ${m.status} | ${fmtMs(m.durationMs)} | ${iters} | ${k(m.totals.in + m.totals.cacheRead + m.totals.cacheWrite)} / ${k(m.totals.out)} | $${m.totals.cost.toFixed(2)} |`);
   }
-  writeText('runs/summary.md', `# Сводка по запускам\n\nОбновляется оркестратором после каждого запуска.\n\n| Запуск | Задача | Конвейер | Запуск | Итог | Время | Итерации AI-этапов | Токены in/out | Стоимость* |\n|---|---|---|---|---|---|---|---|---|\n${rows.join('\n')}\n\n\\* условная стоимость по прайсу API; при работе через подписку не списывается.\n`);
+  writeText('runs/summary.md', `# Сводка по запускам\n\nОбновляется оркестратором после каждого запуска.\n\n| Запуск | Задача | Конвейер | Кто запустил | Итог | Время | Итерации AI-этапов | Токены in/out | Стоимость* |\n|---|---|---|---|---|---|---|---|---|\n${rows.join('\n')}\n\n\\* условная стоимость по прайсу API; при работе через подписку не списывается.\n`);
 }
 
 // ---------- CLI ----------
