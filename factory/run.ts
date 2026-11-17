@@ -280,6 +280,8 @@ async function runPipeline(task: Task, opts: { from?: string; single?: boolean; 
     metrics: [], events: [], tamper: [], appliedKb: [], decisions: [], disputes: [], stopReason: null, learned: false, kbTouched: [], lastDetails: {}, stoppedAt: null,
   };
   fs.mkdirSync(abs(run.dir), { recursive: true });
+  // The task journal links to this report from the start, so it must exist before any link check runs.
+  writeReport(run);
   commit(`factory: snapshot before ${id}`);
   task.data.runs = [...task.data.runs, id];
   journal(task, `запуск [[runs/${id}/report|${id}]] (${run.trigger})${opts.from ? ` с этапа ${opts.from}` : ''}`);
