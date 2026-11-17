@@ -135,7 +135,7 @@ export function applyHumanDecision(scope: string, id: string, value: string, tas
   const updated = section
     .replace(/^- Статус: .*$/m, '- Статус: изменено человеком')
     .trimEnd()
-    .concat(`\n- Решение человека (${new Date().toISOString().slice(0, 16)}): ${value} — применяется задачей ${taskLink(task)}\n`);
+    .concat(`\n- Решение человека (${localStamp()}): ${value} — применяется задачей ${taskLink(task)}\n`);
   writeText(f, text.replace(section, `${updated}\n`));
 }
 
@@ -212,4 +212,10 @@ const RU: Record<string, string> = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd'
 /** Latin transliteration for readable file names. */
 export function translit(s: string): string {
   return [...s.toLowerCase()].map((c) => RU[c] ?? c).join('');
+}
+
+/** Local date and time "YYYY-MM-DD HH:MM" for human-facing journals. */
+export function localStamp(d: Date = new Date()): string {
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
