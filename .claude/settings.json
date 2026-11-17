@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node factory/run.ts *)",
+      "Bash(pnpm start)",
+      "Bash(pnpm exec vitest *)",
+      "Bash(pnpm exec tsc *)",
+      "Bash(curl -s localhost:4000*)"
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+# Declarative pipeline description. The orchestrator (factory/run.ts) is a state machine over it:
+# it runs the stage, reads the stage OUTCOME (a fact: exit codes, hashes, a schema-validated field),
+# and follows `on.<outcome>`. AI agents work inside stages and never pick the next stage.
+#
+# run: ai:<agent>[:<mode>] | check:<name>
+# counter: which attempt counter this stage consumes (default: stage name). Limits are below.
+# Every entry into an AI stage increments its counter; reaching the limit stops the run with a reason.
+
+limits:
+  spec: 2
+  spec_update: 2
+  tests: 3
+  tests_update: 3
+  triage: 2
+  implement: 6        # first attempt + 5 fixes
+  dispute: 2
+  review: 3
+  docs: 2
+  learn: 1
+
+max_turns:
+  analyst: 40
+  test-writer: 60
+  developer: 80
+  reviewer-rules: 30
+  reviewer-integrity: 30
+  docs-writer: 40
+  librarian: 25
+  triage: 20
+
+pipelines:
+  platform:
+    start: spec
+    stages:
+      spec:        { run: "ai:analyst",          on: { done: tests } }
+      tests:       { run: "ai:test-writer",      on: { done: coverage_check } }
+      coverage_check: { run: "check:coverage",   on: { pass: lock_tests, fail: tests } }
+      lock_tests:  { run: "check:lock_tests",    on: { pass: implement } }
+      implement:   { run: "ai:developer",        on: { done: verify, dispute: dispute } }
+      dispute:     { run: "ai:test-writer:dispute", on: { accepted: lock_tests, rejected: implement } }
+      verify:      { run: "check:verify",        on: { pass: review, fail: implement } }
+      review:      { run: "ai:reviewers",        on: { pass: docs, fail: implement } }
+      docs:        { run: "ai:docs-writer",      on: { done: docs_check } }
+      docs_check:  { run: "check:docs",          on: { pass: freeze_platform, fail: docs } }
+      freeze_platform: { run: "check:freeze_platform", on: { pass: learn } }
+      learn:       { run: "ai:librarian",        on: { done: END, error: END } }
+
+  new-game:
+    start: scaffold
+    stages:
+      scaffold:    { run: "check:scaffold",      on: { pass: spec } }
+      spec:        { run: "ai:analyst",          on: { done: tests } }
+      tests:       { run: "ai:test-writer",      on: { done: red_check } }
+      red_check:   { run: "check:red",           on: { pass: lock_tests, fail: tests } }
+      lock_tests:  { run: "check:lock_tests",    on: { pass: implement } }
+      implement:   { run: "ai:developer",        on: { done: verify, dispute: dispute } }
+      dispute:     { run: "ai:test-writer:dispute", on: { accepted: lock_tests, rejected: implement } }
+      verify:      { run: "check:verify",        on: { pass: review, fail: implement } }
+      review:      { run: "ai:reviewers",        on: { pass: docs, fail: implement } }
+      docs:        { run: "ai:docs-writer",      on: { done: docs_check } }
+      docs_check:  { run: "check:docs",          on: { pass: learn, fail: docs } }
+      learn:       { run: "ai:librarian",        on: { done: END, error: END } }
+
+  feedback:
+    start: triage
+    stages:
+      triage:      { run: "ai:triage",           on: { behavior: spec_update, ui_only: implement } }
+      spec_update: { run: "ai:analyst:update",   on: { done: tests_update } }
+      tests_update: { run: "ai:test-writer:update", on: { done: coverage_check } }
+      coverage_check: { run: "check:coverage",   on: { pass: lock_tests, fail: tests_update } }
+      lock_tests:  { run: "check:lock_tests",    on: { pass: implement } }
+      implement:   { run: "ai:developer",        on: { done: verify, dispute: dispute } }
+      dispute:     { run: "ai:test-writer:dispute", on: { accepted: lock_tests, rejected: implement } }
+      verify:      { run: "check:verify",        on: { pass: review, fail: implement } }
+      review:      { run: "ai:reviewers",        on: { pass: docs, fail: implement } }
+      docs:        { run: "ai:docs-writer",      on: { done: docs_check } }
+      docs_check:  { run: "check:docs",          on: { pass: learn, fail: docs } }
+      learn:       { run: "ai:librarian",        on: { done: END, error: END } }
+
+  decision:
+    start: apply_decision
+    stages:
+      apply_decision: { run: "check:apply_decision", on: { pass: spec_update } }
+      spec_update: { run: "ai:analyst:update",   on: { done: tests_update } }
+      tests_update: { run: "ai:test-writer:update", on: { done: coverage_check } }
+      coverage_check: { run: "check:coverage",   on: { pass: lock_tests, fail: tests_update } }
+      lock_tests:  { run: "check:lock_tests",    on: { pass: implement } }
+      implement:   { run: "ai:developer",        on: { done: verify, dispute: dispute } }
+      dispute:     { run: "ai:test-writer:dispute", on: { accepted: lock_tests, rejected: implement } }
+      verify:      { run: "check:verify",        on: { pass: review, fail: implement } }
+      review:      { run: "ai:reviewers",        on: { pass: docs, fail: implement } }
+      docs:        { run: "ai:docs-writer",      on: { done: docs_check } }
+      docs_check:  { run: "check:docs",          on: { pass: learn, fail: docs } }
+      learn:       { run: "ai:librarian",        on: { done: END, error: END } }

@@ -1,0 +1,4 @@
+node_modules/
+data/
+.factory/tmp/
+*.log
