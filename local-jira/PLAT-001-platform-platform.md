@@ -1,19 +1,19 @@
 ---
 id: PLAT-001
-status: stopped
+status: done
 rounds:
-  review: 1
-  docs: 2
+  docs: 1
   learn: 1
 runs:
   - r-001-PLAT-001
   - r-002-PLAT-001
   - r-003-PLAT-001
+  - r-004-PLAT-001
 type: platform
 pipeline: platform
 scope: platform
 title: Платформа
-phase: docs
+phase: END
 stopped_at: docs
 ---
 # PLAT-001: Платформа
@@ -137,3 +137,8 @@ export class GameError extends Error { code: string }
 - 17:01 docs_check → fail (2s)
 - 17:01 ⛔ остановлено: лимит попыток этапа «docs» исчерпан (2). Последний результат этапа «docs»:
 - 17:02 learn → done (28s)
+- 17:02 запуск [[runs/r-004-PLAT-001/report|r-004-PLAT-001]] (auto) с этапа docs
+- 17:03 docs → done (42s)
+- 17:03 docs_check → pass (2s)
+- 17:03 freeze_platform → pass (0s)
+- 17:03 learn → done (7s)
