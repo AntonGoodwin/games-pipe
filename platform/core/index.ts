@@ -15,6 +15,7 @@ import { loadGames, type LoadedGame } from './games.ts';
 import { FileRoundStore } from './store.ts';
 import { walletExecutor } from './wallet-client.ts';
 
+/** Запущенный HTTP-сервис ядра (`url`, `close()`), см. `shared/http.ts`. */
 export type { RunningServer };
 
 const here = path.dirname(fileURLToPath(import.meta.url));

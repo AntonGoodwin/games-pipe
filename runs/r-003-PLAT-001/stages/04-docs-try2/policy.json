@@ -1,0 +1,11 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "docs-writer",
+  "allow": [
+    "platform/**"
+  ],
+  "deny": [
+    "platform/tests/**",
+    "platform/spec.md"
+  ]
+}

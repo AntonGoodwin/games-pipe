@@ -1,0 +1,18 @@
+{
+  "subtype": "success",
+  "is_error": false,
+  "output": {
+    "outcome": "done",
+    "summary": "Написал документацию платформы. Тесты и tsc сам не запускал: Bash в этом запуске запрещён, поэтому проверка остаётся за оркестратором.\n\nСоздан `platform/README.md`. В нём:\n- устройство по модулям: кошелёк, ядро, движок, SDK, testkit, запуск, shared;\n- состояние раунда: поля RoundRecord, порядок проверок в startRound, как ходы меняют раунд и когда он завершается, досылка pendingBet/pendingPayout, таблица ошибок игры;\n- как определяется результат: cryptoRng, обёртка rng на каждый вызов, формула payout, round2;\n- интерфейс оболочки с data-testid;\n- известные ограничения из ревью r-003;\n- команды проверки.\n\nВсе вики-ссылки ведут на существующие файлы: `platform/spec`, `decisions/platform` (с якорями `#D-…`), `local-jira/PLAT-001-platform-platform`, `docs/conventions`.\n\nTSDoc добавил над тремя реэкспортами, которые проверка `missingTsDoc` считает экспортами без комментария (`export type {…}`): `export type { RunningServer }` в `core/index.ts` и `wallet/index.ts`, `export type { OpenResult, RoundView }` в `testkit/index.ts`. Над `export { PlatformError }` в testkit тоже добавил комментарий для единообразия, хотя проверка его не требует. У остальных экспортов комментарии уже были. Логику не менял: правки только в комментариях и README.\n\nДопущение: процедура ручного разбора раунда с `broken` (замечание R-4). Остановить приложение, в `data/rounds.json` убрать у раунда `broken` и записать `pendingPayout: X`, запустить приложение и открыть игру. `open()` сам дошлёт `<roundId>:payout` на X и закроет раунд. Процедура опирается на существующую логику `#recover` в движке.",
+    "applied_kb": []
+  },
+  "usage": {
+    "inputTokens": 24,
+    "outputTokens": 11705,
+    "cacheReadTokens": 870657,
+    "cacheWriteTokens": 103037,
+    "costUsd": 1.2326234,
+    "numTurns": 31,
+    "durationMs": 135989
+  }
+}

@@ -20,6 +20,7 @@ import { writeFileDurable } from '../shared/fs.ts';
 import { checkJsonBody, checkLocalHost, listen, readJson, sendError, sendJson, type RunningServer } from '../shared/http.ts';
 import { round2 } from '../shared/money.ts';
 
+/** Запущенный HTTP-сервис кошелька (`url`, `close()`), см. `shared/http.ts`. */
 export type { RunningServer };
 
 /** Начальный баланс игрока. */

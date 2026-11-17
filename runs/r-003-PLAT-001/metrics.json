@@ -1,0 +1,178 @@
+{
+  "run": "r-003-PLAT-001",
+  "task": "PLAT-001",
+  "pipeline": "platform",
+  "trigger": "auto",
+  "started": "2026-11-17T13:58:01.785Z",
+  "durationMs": 257871,
+  "status": "stopped",
+  "stopReason": "лимит попыток этапа «docs» исчерпан (2). Последний результат этапа «docs»:\nThe docs check failed on a link I'm not allowed to fix: it is in the task file, outside platform/**. Everything in platform/ is already in order, so I changed nothing.\n\n1. The failing link [[runs/r-003-PLAT-001/report]] is in local-jira/PLAT-001-platform-platform.md, which this stage can't write to. The orchestrator adds that line to the task journal when the run starts. But factory/run.ts writes report.md only when the run ends (writeReport), while the check (brokenWikiLinks in factory/lib/checks.ts) runs during the run. So this link fails the docs check on every run, whatever the docs say: runs r-001 and r-002 have report.md, r-003 does not yet. It needs a fix in factory/: either skip the current run's report in the link check, or write a placeholder report.md when the run starts. Re-running docs won't help until that change is made.\n\n2. My area: I checked with Grep, since running scripts was blocked. Every export in platform/**/*.ts outside tests/ has a /** */ comment directly above it, in wallet, core, sdk/types, testkit and shared. platform/README.md is in place and matches the code: structure, round state, how the result is determined, the interface and how to run the checks. Its wiki links (platform/spec, decisions/platform, local-jira/PLAT-001-platform-platform, docs/conventions) and the ones in spec.md lead to existing files.\n\nI didn't edit the code or the README, so the tsc and test results shouldn't change. The last docs_check passed all 46 of 46 tests.\n\nAssumption (decisions): I did not try to get around the write ban on local-jira/. The broken link is treated as an orchestrator defect and handed to whoever maintains factory/.",
+  "totals": {
+    "in": 58,
+    "out": 21245,
+    "cacheRead": 1619031,
+    "cacheWrite": 202913,
+    "cost": 2.3722422,
+    "turns": 54
+  },
+  "byStage": {
+    "review": {
+      "iterations": 1,
+      "durationMs": 50469,
+      "tokens": {
+        "in": 14,
+        "out": 3960,
+        "cacheRead": 339895,
+        "cacheWrite": 43180,
+        "cost": 0.492675,
+        "turns": 10
+      }
+    },
+    "docs": {
+      "iterations": 2,
+      "durationMs": 175502,
+      "tokens": {
+        "in": 38,
+        "out": 14822,
+        "cacheRead": 1182936,
+        "cacheWrite": 142286,
+        "cost": 1.6714672,
+        "turns": 40
+      }
+    },
+    "docs_check": {
+      "iterations": 2,
+      "durationMs": 4150,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "learn": {
+      "iterations": 1,
+      "durationMs": 27722,
+      "tokens": {
+        "in": 6,
+        "out": 2463,
+        "cacheRead": 96200,
+        "cacheWrite": 17447,
+        "cost": 0.2081,
+        "turns": 4
+      }
+    }
+  },
+  "stages": [
+    {
+      "seq": 1,
+      "stage": "review",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "pass",
+      "durationMs": 50469,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "reviewer-integrity",
+          "ok": true,
+          "inputTokens": 14,
+          "outputTokens": 3960,
+          "cacheReadTokens": 339895,
+          "cacheWriteTokens": 43180,
+          "costUsd": 0.492675,
+          "numTurns": 10,
+          "durationMs": 49562
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "stage": "docs",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 136744,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "docs-writer",
+          "ok": true,
+          "inputTokens": 24,
+          "outputTokens": 11705,
+          "cacheReadTokens": 870657,
+          "cacheWriteTokens": 103037,
+          "costUsd": 1.2326234,
+          "numTurns": 31,
+          "durationMs": 135989
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "stage": "docs_check",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "fail",
+      "durationMs": 2091,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 4,
+      "stage": "docs",
+      "kind": "ai",
+      "attempt": 2,
+      "outcome": "done",
+      "durationMs": 38758,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "docs-writer",
+          "ok": true,
+          "inputTokens": 14,
+          "outputTokens": 3117,
+          "cacheReadTokens": 312279,
+          "cacheWriteTokens": 39249,
+          "costUsd": 0.4388438,
+          "numTurns": 9,
+          "durationMs": 38014
+        }
+      ]
+    },
+    {
+      "seq": 5,
+      "stage": "docs_check",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "fail",
+      "durationMs": 2059,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 6,
+      "stage": "learn",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 27722,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "librarian",
+          "ok": true,
+          "inputTokens": 6,
+          "outputTokens": 2463,
+          "cacheReadTokens": 96200,
+          "cacheWriteTokens": 17447,
+          "costUsd": 0.2081,
+          "numTurns": 4,
+          "durationMs": 26962
+        }
+      ]
+    }
+  ]
+}

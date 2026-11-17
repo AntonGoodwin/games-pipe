@@ -8,7 +8,9 @@ import { MemoryRoundStore } from '../core/store.ts';
 import { PlatformError } from '../shared/errors.ts';
 import { round2 } from '../shared/money.ts';
 
+/** Ошибка платформы с полем `code`; testkit бросает её так же, как HTTP API отдаёт `{ error: { code } }`. */
 export { PlatformError };
+/** Ответы `open()` и раундов — те же типы, что у движка и HTTP API. */
 export type { OpenResult, RoundView };
 
 /** Запись журнала транзакций тестовой платформы. */
