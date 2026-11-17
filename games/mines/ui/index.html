@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мины</title>
+<style>
+  :root { color-scheme: light dark; --accent: #2563eb; --win: #16a34a; --lose: #dc2626; --muted: #6b7280; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: Canvas; color: CanvasText; }
+  main { max-width: 420px; margin: 0 auto; padding: 24px 16px; display: grid; gap: 16px; }
+  h1 { margin: 0; font-size: 24px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .label { color: var(--muted); font-size: 14px; }
+  .balance { font-size: 20px; font-weight: 600; }
+  input { font: inherit; padding: 8px; width: 100px; }
+  button { font: inherit; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--muted); background: transparent; color: inherit; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #play { background: var(--accent); color: #fff; border-color: var(--accent); flex: 1; font-weight: 600; }
+  #cashout { border-color: var(--win); color: var(--win); flex: 1; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .cell { aspect-ratio: 1; padding: 0; font-size: 22px; font-weight: 700; }
+  .cell[data-cell-state="safe"] { background: var(--win); border-color: var(--win); color: #fff; opacity: 1; }
+  .cell[data-cell-state="mine"] { background: var(--lose); border-color: var(--lose); color: #fff; opacity: 1; }
+  .cell.hit { outline: 3px solid CanvasText; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; }
+  .stats b { display: block; font-size: 18px; }
+  .result { text-align: center; min-height: 1.5em; font-weight: 600; }
+  [data-state="won"] .result { color: var(--win); }
+  [data-state="lost"] .result { color: var(--lose); }
+  .error { color: var(--lose); min-height: 1.2em; }
+</style>
+</head>
+<body>
+<main data-testid="game" data-state="idle">
+  <h1>Мины</h1>
+  <div class="row"><span class="label">Баланс:</span> <span class="balance" data-testid="balance">—</span></div>
+
+  <div class="row">
+    <label class="label" for="bet">Ставка</label>
+    <input id="bet" data-testid="bet-input" type="number" step="0.01" min="1" max="10" value="1">
+    <span class="label" id="limits"></span>
+  </div>
+
+  <div class="row">
+    <button type="button" id="play" data-testid="play">Новая игра</button>
+    <button type="button" id="cashout" data-testid="cashout" disabled>Забрать</button>
+  </div>
+
+  <div class="stats">
+    <div><span class="label">Множитель</span><b data-testid="multiplier">—</b></div>
+    <div><span class="label">Следующий</span><b data-testid="next-multiplier">—</b></div>
+    <div><span class="label">Мин на поле</span><b id="mine-count">3</b></div>
+  </div>
+
+  <div class="grid" id="grid" role="grid" aria-label="Поле 5 × 5"></div>
+
+  <div class="result" id="result">Выплата: <span data-testid="payout">—</span></div>
+  <div class="error" data-testid="error" role="alert"></div>
+</main>
+<script src="/sdk.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var CELLS = 25;
+  var ERROR_TEXT = {
+    BET_OUT_OF_LIMITS: 'Ставка вне лимитов',
+    INSUFFICIENT_FUNDS: 'Недостаточно средств',
+    INVALID_PARAMS: 'Неверные параметры',
+    INVALID_ACTION: 'Недопустимый ход',
+    ROUND_ALREADY_OPEN: 'Раунд уже открыт',
+    ROUND_CLOSED: 'Раунд уже завершён',
+    NETWORK_ERROR: 'Нет связи с сервером',
+  };
+  var started = false;
+
+  function init() {
+    if (started) return;
+    started = true;
+
+    var sdk = window.PlatformSDK;
+    var q = function (id) { return document.querySelector('[data-testid="' + id + '"]'); };
+    var root = q('game');
+    var balanceEl = q('balance');
+    var betInput = q('bet-input');
+    var playBtn = q('play');
+    var cashoutBtn = q('cashout');
+    var multEl = q('multiplier');
+    var nextEl = q('next-multiplier');
+    var payoutEl = q('payout');
+    var errorEl = q('error');
+    var resultEl = document.getElementById('result');
+    var limitsEl = document.getElementById('limits');
+    var mineCountEl = document.getElementById('mine-count');
+    var grid = document.getElementById('grid');
+
+    var cells = [];
+    for (var i = 0; i < CELLS; i++) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cell';
+      b.setAttribute('data-testid', 'cell-' + i);
+      b.setAttribute('data-cell', String(i));
+      b.setAttribute('data-cell-state', 'hidden');
+      b.setAttribute('aria-label', 'Клетка ' + (i + 1));
+      grid.appendChild(b);
+      cells.push(b);
+    }
+
+    // Текущий вид раунда: null — раунда нет.
+    var view = null;
+    var phase = 'idle';
+    var busy = false;
+
+    function money(n) { return Number(n).toFixed(2); }
+    function setBalance(b) { if (typeof b === 'number') balanceEl.textContent = money(b); }
+
+    function showError(e) {
+      var code = (e && e.code) || 'INTERNAL_ERROR';
+      var text = ERROR_TEXT[code] || (e && e.message) || 'Ошибка';
+      errorEl.textContent = code + ': ' + text;
+    }
+
+    function render() {
+      root.setAttribute('data-state', phase);
+      var revealed = (view && view.revealed) || [];
+      var mines = (view && view.mines) || [];
+      var hit = view ? view.hit : null;
+      cells.forEach(function (c, idx) {
+        var st = 'hidden';
+        if (revealed.indexOf(idx) >= 0) st = 'safe';
+        else if (mines.indexOf(idx) >= 0) st = 'mine';
+        c.setAttribute('data-cell-state', st);
+        c.textContent = st === 'safe' ? '◆' : st === 'mine' ? '✹' : '';
+        c.classList.toggle('hit', idx === hit);
+        c.disabled = busy || phase !== 'playing' || st !== 'hidden';
+      });
+      playBtn.disabled = busy || phase === 'playing';
+      cashoutBtn.disabled = busy || phase !== 'playing' || revealed.length < 1;
+      betInput.disabled = busy || phase === 'playing';
+      multEl.textContent = view ? '×' + view.multiplier : '—';
+      nextEl.textContent = view && typeof view.nextMultiplier === 'number' ? '×' + view.nextMultiplier : '—';
+      if (view && typeof view.mineCount === 'number') mineCountEl.textContent = String(view.mineCount);
+    }
+
+    function applyRound(round) {
+      if (!round) return;
+      setBalance(round.balance);
+      view = round.view || null;
+      if (round.status === 'open') {
+        phase = 'playing';
+        payoutEl.textContent = '—';
+      } else if (view) {
+        phase = view.outcome === 'mine' ? 'lost' : 'won';
+        payoutEl.textContent = money(round.payout || 0);
+      }
+      resultEl.firstChild.textContent = phase === 'lost' ? 'Мина! Выплата: ' : 'Выплата: ';
+    }
+
+    function call(promise) {
+      busy = true;
+      errorEl.textContent = '';
+      render();
+      return promise.then(applyRound, showError).then(function () { busy = false; render(); });
+    }
+
+    playBtn.addEventListener('click', function () {
+      if (busy || phase === 'playing') return;
+      var bet = Number(betInput.value);
+      call(sdk.startRound(bet, {}));
+    });
+
+    cashoutBtn.addEventListener('click', function () {
+      if (busy || phase !== 'playing') return;
+      call(sdk.action({ type: 'cashout' }));
+    });
+
+    cells.forEach(function (c, idx) {
+      c.addEventListener('click', function () {
+        if (busy || phase !== 'playing' || c.getAttribute('data-cell-state') !== 'hidden') return;
+        call(sdk.action({ type: 'reveal', cell: idx }));
+      });
+    });
+
+    busy = true;
+    render();
+    sdk.open().then(function (info) {
+      setBalance(info.balance);
+      if (info.limits) {
+        betInput.min = String(info.limits.min);
+        betInput.max = String(info.limits.max);
+        limitsEl.textContent = 'от ' + info.limits.min + ' до ' + info.limits.max;
+      }
+      // Незавершённый раунд после обновления страницы — продолжаем его.
+      if (info.activeRound) applyRound(info.activeRound);
+    }, showError).then(function () { busy = false; render(); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "locked_at": "2026-11-17T14:32:38.749Z",
+  "task": "GAME-002",
+  "hashes": {
+    "games/mines/tests/module.test.ts": "3fa1c53e94533a2e6b4031c9568647a5fc53b8ff79de432b700e55410d1a1fcf",
+    "games/mines/tests/rounds.test.ts": "44431ea27d6189250433a5301e7995c5121d58249b79a1fde7309f37c51a70d6",
+    "games/mines/tests/ui.test.ts": "9ebf76f11985e63e13a898b813f065e6e735244523f377fecc8cd0eb1fb3d909"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "mines",
+  "title": "Мины",
+  "server": "server/index.ts",
+  "ui": "ui/index.html"
+}

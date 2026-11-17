@@ -9,5 +9,6 @@
 | [[runs/r-003-PLAT-001/report\|r-003-PLAT-001]] | PLAT-001 | platform | auto | stopped | 4m18s | review×1 docs×2 | 1822.0k / 21.2k | $2.37 |
 | [[runs/r-004-PLAT-001/report\|r-004-PLAT-001]] | PLAT-001 | platform | auto | done | 51s | docs×1 | 372.2k / 3.6k | $0.51 |
 | [[runs/r-005-GAME-001/report\|r-005-GAME-001]] | GAME-001 | new-game | auto | done | 8m04s | spec×1 tests×1 implement×1 review×1 docs×1 | 2566.4k / 46.1k | $3.60 |
+| [[runs/r-006-GAME-002/report\|r-006-GAME-002]] | GAME-002 | new-game | auto | done | 11m39s | spec×1 tests×1 implement×1 review×1 docs×1 | 3134.0k / 71.7k | $4.92 |
 
 \* условная стоимость по прайсу API; при работе через подписку не списывается.
