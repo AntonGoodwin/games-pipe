@@ -18,8 +18,8 @@ export interface CoinState {
   win: boolean;
 }
 
-/** Коэффициент выплаты при угадывании: честные 2 минус 2 % house edge (D-001). */
-export const PAYOUT_MULTIPLIER = 1.96;
+/** Коэффициент выплаты при угадывании — решение человека D-001 (GAME-004). */
+export const PAYOUT_MULTIPLIER = 1.9;
 
 function isSide(value: unknown): value is Side {
   return value === 'heads' || value === 'tails';
@@ -38,7 +38,7 @@ function flip(rng: Rng): Side {
  * - `validateParams(params)` — возвращает `{ side }`; бросает `GameError('INVALID_PARAMS')`, если
  *   `params` не объект или `side` не `'heads'`/`'tails'` (D-005).
  * - `start({ bet, params, rng })` — один вызов `rng.next()`, возвращает закрытый шаг
- *   `{ status: 'finished', state, payout }`, где `payout = win ? bet × 1.96 : 0` (D-001…D-003).
+ *   `{ status: 'finished', state, payout }`, где `payout = win ? bet × PAYOUT_MULTIPLIER : 0` (D-001…D-003).
  * - `action()` — всегда бросает `GameError('INVALID_ACTION')`: ходов внутри раунда нет.
  * - `publicView(state)` — `{ side, outcome, win }`, скрытого нет (D-006).
  */

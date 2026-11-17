@@ -1,0 +1,8 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "test-writer",
+  "allow": [
+    "games/coin/tests/**"
+  ],
+  "deny": []
+}

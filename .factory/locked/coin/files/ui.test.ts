@@ -104,14 +104,14 @@ describe('Монетка: интерфейс', () => {
       gameId: 'coin',
       bet: 1,
       status: 'closed',
-      payout: 1.96,
-      balance: 100.96,
+      payout: 1.9,
+      balance: 100.9,
       view: { side: 'tails', outcome: 'tails', win: true },
     });
     await waitFor(() => $('game').getAttribute('data-state') === 'won', 'data-state=won');
     expect($('outcome').textContent).toContain('Решка');
-    expect(numberIn('payout')).toBe(1.96);
-    expect(numberIn('balance')).toBe(100.96);
+    expect(numberIn('payout')).toBe(1.9);
+    expect(numberIn('balance')).toBe(100.9);
     await waitFor(() => !isDisabled($('play')), 'кнопка play доступна после броска');
 
     // Отказ платформы: код в error, баланс прежний, кнопка снова доступна.
@@ -119,7 +119,7 @@ describe('Монетка: интерфейс', () => {
     $('play').click();
     await waitFor(() => sdk.startRound.mock.calls.length === 2, 'второй вызов startRound');
     await waitFor(() => ($('error').textContent ?? '').includes('INSUFFICIENT_FUNDS'), 'код ошибки в error');
-    expect(numberIn('balance')).toBe(100.96);
+    expect(numberIn('balance')).toBe(100.9);
     await waitFor(() => !isDisabled($('play')), 'кнопка play доступна после ошибки');
     expect(sdk.action).not.toHaveBeenCalled();
   });

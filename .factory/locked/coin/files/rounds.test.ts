@@ -30,20 +30,20 @@ describe('Монетка: раунды через платформу', () => {
     vi.restoreAllMocks();
   });
 
-  it('SC-1: выигрыш на орле — выплата bet × 1.96, раунд закрыт сразу', () => {
+  it('SC-1: выигрыш на орле — выплата bet × 1.9, раунд закрыт сразу', () => {
     const p = platform([0.3]);
     const r = p.startRound('coin', 1, { side: 'heads' });
     expect(r.gameId).toBe('coin');
     expect(r.status).toBe('closed');
     expect(r.bet).toBe(1);
-    expect(r.payout).toBe(1.96);
-    expect(r.balance).toBe(100.96);
+    expect(r.payout).toBe(1.9);
+    expect(r.balance).toBe(100.9);
     expect(r.view).toEqual({ side: 'heads', outcome: 'heads', win: true });
-    expect(p.balance()).toBe(100.96);
+    expect(p.balance()).toBe(100.9);
     const txs = p.transactions();
     expect(txs).toHaveLength(2);
     expect(txs[0]).toMatchObject({ type: 'bet', roundId: r.roundId, amount: 1, balanceAfter: 99 });
-    expect(txs[1]).toMatchObject({ type: 'payout', roundId: r.roundId, amount: 1.96, balanceAfter: 100.96 });
+    expect(txs[1]).toMatchObject({ type: 'payout', roundId: r.roundId, amount: 1.9, balanceAfter: 100.9 });
   });
 
   it('SC-2: выигрыш на решке при rng ровно 0.5 и максимальной ставке 10', () => {
@@ -51,14 +51,14 @@ describe('Монетка: раунды через платформу', () => {
     const r = p.startRound('coin', 10, { side: 'tails' });
     expect(r.status).toBe('closed');
     expect(r.bet).toBe(10);
-    expect(r.payout).toBe(19.6);
-    expect(r.balance).toBe(109.6);
+    expect(r.payout).toBe(19);
+    expect(r.balance).toBe(109);
     expect(r.view).toEqual({ side: 'tails', outcome: 'tails', win: true });
-    expect(p.balance()).toBe(109.6);
+    expect(p.balance()).toBe(109);
     const txs = p.transactions();
     expect(txs).toHaveLength(2);
     expect(txs[0]).toMatchObject({ type: 'bet', amount: 10, balanceAfter: 90 });
-    expect(txs[1]).toMatchObject({ type: 'payout', amount: 19.6, balanceAfter: 109.6 });
+    expect(txs[1]).toMatchObject({ type: 'payout', amount: 19, balanceAfter: 109 });
   });
 
   it('SC-3: проигрыш — выплата 0, ставка потеряна, раунд закрыт выплатой 0', () => {
@@ -94,22 +94,22 @@ describe('Монетка: раунды через платформу', () => {
     const p = platform([0.4999]);
     const r = p.startRound('coin', 2, { side: 'heads' });
     expect(r.view).toEqual({ side: 'heads', outcome: 'heads', win: true });
-    expect(r.payout).toBe(3.92);
-    expect(r.balance).toBe(101.92);
+    expect(r.payout).toBe(3.8);
+    expect(r.balance).toBe(101.8);
   });
 
-  it('SC-5: выплата округляется до центов — 3.33 × 1.96 = 6.5268 → 6.53', () => {
+  it('SC-5: выплата округляется до центов — 3.33 × 1.9 = 6.327 → 6.33', () => {
     const p = platform([0]);
     const r = p.startRound('coin', 3.33, { side: 'heads' });
     expect(r.status).toBe('closed');
     expect(r.bet).toBe(3.33);
     expect(r.view).toEqual({ side: 'heads', outcome: 'heads', win: true });
-    expect(r.payout).toBe(6.53);
-    expect(r.balance).toBe(103.2);
-    expect(p.balance()).toBe(103.2);
+    expect(r.payout).toBe(6.33);
+    expect(r.balance).toBe(103);
+    expect(p.balance()).toBe(103);
     expect(p.transactions().map((t) => [t.type, t.amount, t.balanceAfter])).toEqual([
       ['bet', 3.33, 96.67],
-      ['payout', 6.53, 103.2],
+      ['payout', 6.33, 103],
     ]);
   });
 
@@ -126,8 +126,8 @@ describe('Монетка: раунды через платформу', () => {
     // rng не тронут: единственное число 0.3 достаётся следующему корректному раунду.
     const r = p.startRound('coin', 1, { side: 'heads', extra: 42 });
     expect(r.status).toBe('closed');
-    expect(r.payout).toBe(1.96);
-    expect(r.balance).toBe(100.96);
+    expect(r.payout).toBe(1.9);
+    expect(r.balance).toBe(100.9);
     expect(r.view).toEqual({ side: 'heads', outcome: 'heads', win: true });
     expect(r.view).not.toHaveProperty('extra');
     expect(p.transactions()).toHaveLength(2);
@@ -152,8 +152,8 @@ describe('Монетка: раунды через платформу', () => {
 
     // rng не потрачен: следующий доступный по деньгам раунд получает 0.3.
     const r = p.startRound('coin', 5, { side: 'heads' });
-    expect(r.payout).toBe(9.8);
-    expect(r.balance).toBe(9.8);
+    expect(r.payout).toBe(9.5);
+    expect(r.balance).toBe(9.5);
   });
 
   it('SC-9: серия бросков — каждый раунд закрыт, action даёт ROUND_CLOSED, один rng на раунд', () => {
@@ -161,12 +161,12 @@ describe('Монетка: раунды через платформу', () => {
     const r1 = p.startRound('coin', 2, { side: 'heads' });
     expect(r1.status).toBe('closed');
     expect(r1.view).toEqual({ side: 'heads', outcome: 'heads', win: true });
-    expect(r1.payout).toBe(3.92);
-    expect(r1.balance).toBe(101.92);
+    expect(r1.payout).toBe(3.8);
+    expect(r1.balance).toBe(101.8);
     expect(p.open('coin').activeRound).toBeNull();
 
     expect(codeOf(() => p.action(r1.roundId, 'flip'))).toBe('ROUND_CLOSED');
-    expect(p.balance()).toBe(101.92);
+    expect(p.balance()).toBe(101.8);
     expect(p.transactions()).toHaveLength(2);
 
     const r2 = p.startRound('coin', 2, { side: 'heads' });
@@ -174,16 +174,16 @@ describe('Монетка: раунды через платформу', () => {
     expect(r2.status).toBe('closed');
     expect(r2.view).toEqual({ side: 'heads', outcome: 'tails', win: false });
     expect(r2.payout).toBe(0);
-    expect(r2.balance).toBe(99.92);
+    expect(r2.balance).toBe(99.8);
 
     const o = p.open('coin');
-    expect(o).toMatchObject({ gameId: 'coin', limits: { min: 1, max: 10 }, balance: 99.92, activeRound: null });
+    expect(o).toMatchObject({ gameId: 'coin', limits: { min: 1, max: 10 }, balance: 99.8, activeRound: null });
     expect(o.activeRound).toBeNull();
     expect(p.transactions().map((t) => [t.type, t.amount, t.balanceAfter])).toEqual([
       ['bet', 2, 98],
-      ['payout', 3.92, 101.92],
-      ['bet', 2, 99.92],
-      ['payout', 0, 99.92],
+      ['payout', 3.8, 101.8],
+      ['bet', 2, 99.8],
+      ['payout', 0, 99.8],
     ]);
   });
 });

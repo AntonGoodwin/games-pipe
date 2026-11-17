@@ -1,10 +1,10 @@
 # Монетка
-Задача: [[local-jira/GAME-001-coin-new-game]] · Решения: [[decisions/coin]] · Платформа: [[platform/spec]]
+Задача: [[local-jira/GAME-001-coin-new-game]], изменение [[local-jira/GAME-004-coin-decision]] · Решения: [[decisions/coin]] · Платформа: [[platform/spec]]
 
 ## Правила
 - Игрок выбирает сторону монеты — орёл (`heads`) или решка (`tails`) — и делает ставку. Угадал — получает выплату, не угадал — теряет ставку.
 - Лимиты ставки, списание, выплата, округление до центов и коды ошибок — по [[platform/spec]]. Игра о кошельке не знает: она только возвращает `payout` в `Step`.
-- Коэффициент выплаты при угадывании — **1.96** (честные 2 минус 2 % house edge) (допущение, см. журнал решений).
+- Коэффициент выплаты при угадывании — **1.9** (решение человека D-001, задача GAME-004; заменяет прежнее допущение 1.96). Форма `params`, `state` и `view` не меняется, меняются только числа выплат.
 - Раунд состоит из одного броска: исход определяется в `start`, раунд сразу завершается. Ходов внутри раунда нет (допущение, см. журнал решений).
 - Ребра у монеты нет: исходов ровно два (допущение, см. журнал решений).
 - Порядок в `start` — по контракту `platform/sdk/types.ts`: всё, что может упасть, проверяется до обращения к `rng`. `rng.next()` вызывается ровно один раз, после него исключений нет. Состояние раунда — простой JSON-объект. `Math.random` не используется.
@@ -18,8 +18,8 @@
 ## Результат и выплата
 - Исход по одному числу rng `r ∈ [0, 1)`: `r < 0.5` → `heads`, `r ≥ 0.5` → `tails`. Граница: `0.4999 → heads`, `0.5 → tails`.
 - `win = (outcome === side)`.
-- `payout = win ? bet × 1.96 : 0`. Округление до центов делает платформа (`Math.round(x × 100) / 100`).
-- Примеры: ставка 1 → 1.96; ставка 3.33 → 6.5268 → 6.53; ставка 10 → 19.60.
+- `payout = win ? bet × 1.9 : 0`. Округление до центов делает платформа (`Math.round(x × 100) / 100`).
+- Примеры: ставка 1 → 1.9; ставка 2 → 3.8; ставка 3.33 → 6.327 → 6.33; ставка 4 → 7.6; ставка 10 → 19.
 - `state = { side, outcome, win }`.
 
 ## Что видит игрок
@@ -35,13 +35,13 @@
 **SC-1: выигрыш на орле**
 Дано `fixedRng([0.3])`, баланс 100
 Когда `startRound("coin", 1, { side: "heads" })`
-Тогда `status: "closed"`, `bet: 1`, `payout: 1.96`, `balance: 100.96`, `view: { side: "heads", outcome: "heads", win: true }`
-И `transactions()` = `[{ type: "bet", amount: 1, balanceAfter: 99 }, { type: "payout", amount: 1.96, balanceAfter: 100.96 }]`
+Тогда `status: "closed"`, `bet: 1`, `payout: 1.9`, `balance: 100.9`, `view: { side: "heads", outcome: "heads", win: true }`
+И `transactions()` = `[{ type: "bet", amount: 1, balanceAfter: 99 }, { type: "payout", amount: 1.9, balanceAfter: 100.9 }]`
 
 **SC-2: выигрыш на решке, граница 0.5 и максимальная ставка**
 Дано `fixedRng([0.5])`, баланс 100
 Когда `startRound("coin", 10, { side: "tails" })`
-Тогда `status: "closed"`, `payout: 19.6`, `balance: 109.6`, `view: { side: "tails", outcome: "tails", win: true }`
+Тогда `status: "closed"`, `payout: 19`, `balance: 109`, `view: { side: "tails", outcome: "tails", win: true }`
 
 **SC-3: проигрыш**
 Дано `fixedRng([0.7])`, баланс 100
@@ -57,14 +57,14 @@
 **SC-5: округление выплаты**
 Дано `fixedRng([0])`, баланс 100
 Когда `startRound("coin", 3.33, { side: "heads" })`
-Тогда `payout: 6.53` (3.33 × 1.96 = 6.5268), `balance: 103.2`
+Тогда `payout: 6.33` (3.33 × 1.9 = 6.327), `balance: 103`
 
 **SC-6: неверные параметры отклоняются до списания и до rng**
 Дано `fixedRng([0.3])`, баланс 100
 Когда `startRound("coin", 1, p)` для каждого `p` из: `{ side: "edge" }`, `{ side: "HEADS" }`, `{ side: 1 }`, `{}`, `null`, `"heads"`
 Тогда каждый вызов бросает `INVALID_PARAMS`, `transactions()` пуст, баланс 100
 Когда затем `startRound("coin", 1, { side: "heads", extra: 42 })`
-Тогда раунд проходит на том же rng 0.3: `outcome: "heads"`, `payout: 1.96`, `balance: 100.96`, `view` не содержит `extra`
+Тогда раунд проходит на том же rng 0.3: `outcome: "heads"`, `payout: 1.9`, `balance: 100.9`, `view` не содержит `extra`
 
 **SC-7: лимиты ставки**
 Когда `startRound("coin", 0.5, { side: "heads" })` и `startRound("coin", 10.01, { side: "heads" })`
@@ -78,26 +78,26 @@
 **SC-9: серия бросков, раунд не остаётся открытым**
 Дано `fixedRng([0.1, 0.9])`, баланс 100
 Когда `startRound("coin", 2, { side: "heads" })`
-Тогда `payout: 3.92`, `balance: 101.92`
+Тогда `payout: 3.8`, `balance: 101.8`
 Когда `action(roundId, "flip")` для этого раунда
-Тогда бросается `ROUND_CLOSED`, баланс 101.92
+Тогда бросается `ROUND_CLOSED`, баланс 101.8
 Когда `startRound("coin", 2, { side: "heads" })`
-Тогда `outcome: "tails"`, `payout: 0`, `balance: 99.92`
-И `open("coin")` = `{ gameId: "coin", limits: { min: 1, max: 10 }, balance: 99.92, activeRound: null }`, в `transactions()` 4 записи
+Тогда `outcome: "tails"`, `payout: 0`, `balance: 99.8`
+И `open("coin")` = `{ gameId: "coin", limits: { min: 1, max: 10 }, balance: 99.8, activeRound: null }`, в `transactions()` 4 записи
 
 **SC-10: контракт модуля игры**
 Дано серверный модуль `games/coin/server/index.ts`
 Тогда `id` = `"coin"`, `validateParams({ side: "tails", x: 1 })` = `{ side: "tails" }`
 Когда `start({ bet: 4, params: { side: "tails" }, rng })` с rng, который отдаёт одно число 0.75 и бросает при втором вызове
-Тогда результат `{ status: "finished", state: { side: "tails", outcome: "tails", win: true }, payout: 7.84 }`, rng вызван ровно 1 раз, `JSON.parse(JSON.stringify(state))` равен `state`
+Тогда результат `{ status: "finished", state: { side: "tails", outcome: "tails", win: true }, payout: 7.6 }` (4 × 1.9; сравнение с точностью до центов), rng вызван ровно 1 раз, `JSON.parse(JSON.stringify(state))` равен `state`
 И `publicView(state, true)` = `{ side: "tails", outcome: "tails", win: true }`
 И `action({ bet: 4, params, state, action: "flip", rng })` бросает `GameError` с кодом `INVALID_ACTION`, не вызывая rng
 
 **SC-11: интерфейс**
-Дано `ui/index.html` в happy-dom, `window.PlatformSDK` подменён: `open()` → `{ balance: 100, limits: { min: 1, max: 10 }, activeRound: null }`, `startRound(1, { side: "tails" })` → `{ status: "closed", payout: 1.96, balance: 100.96, view: { side: "tails", outcome: "tails", win: true } }`
+Дано `ui/index.html` в happy-dom, `window.PlatformSDK` подменён: `open()` → `{ balance: 100, limits: { min: 1, max: 10 }, activeRound: null }`, `startRound(1, { side: "tails" })` → `{ status: "closed", payout: 1.9, balance: 100.9, view: { side: "tails", outcome: "tails", win: true } }`
 Когда страница загружена
 Тогда `data-state="idle"`, `balance` показывает 100
 Когда нажаты `side-tails`, затем `play`
-Тогда `startRound` вызван с `(1, { side: "tails" })`, `data-state="won"`, `outcome` содержит «Решка», `payout` содержит 1.96, `balance` показывает 100.96
+Тогда `startRound` вызван с `(1, { side: "tails" })`, `data-state="won"`, `outcome` содержит «Решка», `payout` содержит 1.9, `balance` показывает 100.9
 Когда `startRound` отклоняется с `{ code: "INSUFFICIENT_FUNDS" }`
 Тогда `error` содержит `INSUFFICIENT_FUNDS`, `balance` не меняется, кнопка `play` снова доступна

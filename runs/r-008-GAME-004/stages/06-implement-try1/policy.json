@@ -1,0 +1,10 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "developer",
+  "allow": [
+    "games/coin/server/**",
+    "games/coin/ui/**",
+    "games/coin/manifest.json"
+  ],
+  "deny": []
+}

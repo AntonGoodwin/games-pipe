@@ -55,7 +55,7 @@ describe('Монетка: контракт модуля игры', () => {
     expect(calls()).toBe(1);
     expect(step.status).toBe('finished');
     expect(step.state).toEqual({ side: 'tails', outcome: 'tails', win: true });
-    expect(step.payout).toBeCloseTo(7.84, 9);
+    expect(step.payout).toBeCloseTo(7.6, 9);
     expect(JSON.parse(JSON.stringify(step.state))).toEqual(step.state);
     expect(game.publicView(step.state, true)).toEqual({ side: 'tails', outcome: 'tails', win: true });
   });
@@ -73,7 +73,7 @@ describe('Монетка: контракт модуля игры', () => {
     const s2: any = game.start({ bet: 4, params: { side: 'heads' }, rng: low.rng });
     expect(low.calls()).toBe(1);
     expect(s2.state).toEqual({ side: 'heads', outcome: 'heads', win: true });
-    expect(s2.payout).toBeCloseTo(7.84, 9);
+    expect(s2.payout).toBeCloseTo(7.6, 9);
   });
 
   it('SC-10: action бросает GameError INVALID_ACTION, не обращаясь к rng', () => {

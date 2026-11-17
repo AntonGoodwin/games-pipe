@@ -1,0 +1,11 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "docs-writer",
+  "allow": [
+    "games/coin/README.md",
+    "games/coin/docs/**",
+    "games/coin/server/**",
+    "games/coin/ui/**"
+  ],
+  "deny": []
+}

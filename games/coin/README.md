@@ -1,11 +1,11 @@
 # Монетка
-Спецификация: [[games/coin/spec]] · Решения: [[decisions/coin]] · Платформа: [[platform/spec]] · Задача: [[local-jira/GAME-001-coin-new-game]]
+Спецификация: [[games/coin/spec]] · Решения: [[decisions/coin]] · Платформа: [[platform/spec]] · Задача: [[local-jira/GAME-001-coin-new-game]] · Изменение коэффициента: [[local-jira/GAME-004-coin-decision]]
 
-Игрок выбирает сторону монеты и делает ставку. Если угадал, получает выплату ×1.96.
+Игрок выбирает сторону монеты и делает ставку. Если угадал, получает выплату ×1.9.
 
 ## Устройство
 - `manifest.json` — `{ id: "coin", title, server, ui }`, по нему платформа находит модуль и страницу.
-- `server/index.ts` — `export default` объект `GameModule`: проверка параметров, бросок, выплата, публичное представление. Из платформы импортирует только `platform/sdk/types.ts` (`GameModule`, `Rng`, `Step`, `GameError`). Экспортирует также типы `Side`, `CoinParams`, `CoinState` и константу `PAYOUT_MULTIPLIER = 1.96`.
+- `server/index.ts` — `export default` объект `GameModule`: проверка параметров, бросок, выплата, публичное представление. Из платформы импортирует только `platform/sdk/types.ts` (`GameModule`, `Rng`, `Step`, `GameError`). Экспортирует также типы `Side`, `CoinParams`, `CoinState` и константу `PAYOUT_MULTIPLIER = 1.9`.
 - `ui/index.html` — интерфейс: один файл с инлайновыми стилями и скриптом, работает только через `window.PlatformSDK` (`/sdk.js`).
 - `tests/` — приёмочные тесты: `rounds.test.ts` (через платформу, SC-1…SC-9), `module.test.ts` (контракт модуля, SC-10), `ui.test.ts` (интерфейс в happy-dom, SC-11).
 
@@ -21,7 +21,7 @@
 1. `start` повторно вызывает `validateParams` ([[decisions/coin#D-013]]). Всё, что может бросить исключение, выполняется до обращения к rng.
 2. Один вызов `rng.next()` → `r ∈ [0, 1)`: `r < 0.5` → `heads`, иначе `tails` ([[decisions/coin#D-002]]). Ребра нет ([[decisions/coin#D-004]]).
 3. `win = outcome === side`.
-4. `payout = win ? bet × PAYOUT_MULTIPLIER : 0`, где `PAYOUT_MULTIPLIER = 1.96` (честные 2 минус 2 % house edge, [[decisions/coin#D-001]]). Модуль возвращает сырое произведение, до центов его округляет платформа: 3.33 → 6.5268 → 6.53.
+4. `payout = win ? bet × PAYOUT_MULTIPLIER : 0`, где `PAYOUT_MULTIPLIER = 1.9`. Это решение человека по [[decisions/coin#D-001]], применённое задачей [[local-jira/GAME-004-coin-decision]]. Раньше коэффициент был 1.96. Модуль возвращает сырое произведение, до центов его округляет платформа (`Math.round(x × 100) / 100`): 3.33 × 1.9 = 6.327 → 6.33, баланс 100 − 3.33 + 6.33 = 103 ([[decisions/coin#D-016]]). Ставка 4 даёт 7.6 ([[decisions/coin#D-017]]).
 
 `Math.random` не используется. Исход полностью задаётся переданным `rng`, поэтому в тестах им управляют через `fixedRng`.
 

@@ -1,0 +1,9 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "analyst",
+  "allow": [
+    "games/coin/spec.md",
+    "games/coin/docs/**"
+  ],
+  "deny": []
+}

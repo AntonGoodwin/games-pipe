@@ -1,0 +1,17 @@
+{
+  "subtype": "success",
+  "is_error": false,
+  "output": {
+    "summary": "Запуск GAME-004 (decision, coin: коэффициент 1.96 → 1.9) прошёл гладко. Каждый этап завершился с первой попытки, тесты прошли 62/62, споров и откатов записи не было, лимиты не сработали. Две мелочи уже покрыты существующим порядком. Implement не мог запустить тесты без Bash, это уже описано в KB-007. Устаревший README поправил этап docs, как и задумано в конвейере decision. Новых уроков нет.",
+    "entries": []
+  },
+  "usage": {
+    "inputTokens": 4,
+    "outputTokens": 571,
+    "cacheReadTokens": 58546,
+    "cacheWriteTokens": 15562,
+    "costUsd": 0.14764120000000003,
+    "numTurns": 3,
+    "durationMs": 9245
+  }
+}
