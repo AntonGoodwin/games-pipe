@@ -1,0 +1,71 @@
+{
+  "subtype": "success",
+  "is_error": false,
+  "output": {
+    "outcome": "done",
+    "summary": "Написан games/coin/spec.md. Игра «Монетка»: один бросок за раунд, params { side: \"heads\" | \"tails\" }. Исход определяется одним числом rng: r < 0.5 даёт heads, иначе tails. При угадывании выплата bet × 1.96, при проигрыше 0. Раунд закрывается прямо в start, publicView = { side, outcome, win }. Лимиты, кошелёк и округление описаны ссылкой на [[platform/spec]]. Сценарии SC-1…SC-11 на Gherkin с конкретными ставками, значениями rng, выплатами и балансом. Они покрывают: выигрыш и проигрыш, обе границы rng (0.4999 и 0.5), округление (3.33 → 6.53), неверные params (отклоняются до списания и до обращения к rng), один сценарий на лимиты, один на недостаток средств, серию раундов с ROUND_CLOSED и activeRound: null, контракт модуля (rng вызывается ровно 1 раз, состояние сериализуется, action → INVALID_ACTION) и интерфейс через подменённый PlatformSDK.",
+    "scenarios": [
+      "SC-1: выигрыш на орле: ставка 1, rng 0.3, баланс 100 → 100.96, транзакции bet 1 / payout 1.96",
+      "SC-2: выигрыш на решке при rng 0.5, ставка 10 → выплата 19.6, баланс 109.6",
+      "SC-3: проигрыш: ставка 5 на heads, rng 0.7 → выплата 0, баланс 95, payout с amount 0 в журнале",
+      "SC-4: проигрыш у границы: rng 0.4999 → heads, ставка 2 на tails → баланс 98",
+      "SC-5: округление: ставка 3.33, rng 0 → выплата 6.53, баланс 103.2",
+      "SC-6: неверные params (edge, HEADS, 1, {}, null, строка) → INVALID_PARAMS, нет транзакций, rng не расходуется; лишние поля игнорируются",
+      "SC-7: ставки 0.5 и 10.01 → BET_OUT_OF_LIMITS, баланс 100",
+      "SC-8: startBalance 5, ставка 6 → INSUFFICIENT_FUNDS, баланс 5, activeRound null",
+      "SC-9: серия: 100 → 101.92 → 99.92, action на закрытом раунде → ROUND_CLOSED, open даёт activeRound null, 4 транзакции",
+      "SC-10: контракт модуля: validateParams нормализует, start вызывает rng ровно 1 раз, состояние сериализуется, publicView, action → INVALID_ACTION без rng",
+      "SC-11: интерфейс (happy-dom, подменённый PlatformSDK): idle → won, вывод исхода, выплаты и баланса, показ кода ошибки"
+    ],
+    "decisions": [
+      {
+        "question": "Какой коэффициент выплаты при угадывании?",
+        "assumption": "1.96 (честные 2 минус 2 % house edge)",
+        "rationale": "Обычный коэффициент для coin flip; совпадает с тестовой игрой t-flip из platform/spec"
+      },
+      {
+        "question": "Как rng превращается в исход?",
+        "assumption": "Одно число r: r < 0.5 → heads, r ≥ 0.5 → tails",
+        "rationale": "Детерминированно и равновероятно на [0, 1); так же устроена t-flip, и тесты легко управляют исходом через fixedRng"
+      },
+      {
+        "question": "Из скольких шагов состоит раунд?",
+        "assumption": "Из одного: исход определяется в start, раунд сразу закрывается; любой action даёт INVALID_ACTION (через платформу — ROUND_CLOSED)",
+        "rationale": "В описании нет ходов внутри раунда: выбрать сторону, поставить, получить результат"
+      },
+      {
+        "question": "Может ли монета встать на ребро?",
+        "assumption": "Нет, исходов ровно два",
+        "rationale": "В описании о третьем исходе ничего нет; ребро усложнило бы правила без пользы"
+      },
+      {
+        "question": "Как валидировать params?",
+        "assumption": "Принимаются только объекты с side строго 'heads' или 'tails' в нижнем регистре; лишние поля игнорируются, результат нормализуется до { side }; всё остальное даёт INVALID_PARAMS",
+        "rationale": "Строгая проверка стороны исключает двусмысленность; лишние поля безвредны, а нормализация не даёт им попасть в состояние"
+      },
+      {
+        "question": "Что отдаёт publicView?",
+        "assumption": "{ side, outcome, win } — одинаково всегда, скрытого нет",
+        "rationale": "Раунд закрывается в том же запросе, поэтому раскрывать до завершения нечего"
+      },
+      {
+        "question": "Какие элементы интерфейса и состояния проверять?",
+        "assumption": "data-testid: game (с data-state idle/playing/won/lost), balance, bet-input (по умолчанию 1), side-heads/side-tails (aria-pressed, по умолчанию heads), play, outcome, payout, error",
+        "rationale": "Конвенции требуют data-testid и data-state; минимальный набор для тестов интерфейса"
+      }
+    ],
+    "applied_kb": [
+      "KB-001",
+      "KB-004"
+    ]
+  },
+  "usage": {
+    "inputTokens": 12,
+    "outputTokens": 8014,
+    "cacheReadTokens": 223223,
+    "cacheWriteTokens": 56159,
+    "costUsd": 0.6542446,
+    "numTurns": 8,
+    "durationMs": 81779
+  }
+}

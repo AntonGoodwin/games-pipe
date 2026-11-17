@@ -1,0 +1,9 @@
+{
+  "locked_at": "2026-11-17T14:10:51.964Z",
+  "task": "GAME-001",
+  "hashes": {
+    "games/coin/tests/module.test.ts": "356ce39c4d774f2c5f08f4ef3e74619ae9f643677b351c9dcbc90b9a09616154",
+    "games/coin/tests/rounds.test.ts": "c569962f18c421ab85d18e75cb5ed5f85b3fdf163199c21c94aa28eca8aad8eb",
+    "games/coin/tests/ui.test.ts": "d7186c3962219907b4351592c4b3255fae133dd233d1509e3a21431d9e6f0829"
+  }
+}

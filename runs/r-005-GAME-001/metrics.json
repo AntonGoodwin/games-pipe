@@ -4,17 +4,344 @@
   "pipeline": "new-game",
   "trigger": "auto",
   "started": "2026-11-17T14:06:27.550Z",
-  "durationMs": 0,
-  "status": "new",
+  "durationMs": 484129,
+  "status": "done",
   "stopReason": null,
   "totals": {
-    "in": 0,
-    "out": 0,
-    "cacheRead": 0,
-    "cacheWrite": 0,
-    "cost": 0,
-    "turns": 0
+    "in": 93,
+    "out": 46076,
+    "cacheRead": 2288161,
+    "cacheWrite": 278097,
+    "cost": 3.6043001999999995,
+    "turns": 76
   },
-  "byStage": {},
-  "stages": []
+  "byStage": {
+    "scaffold": {
+      "iterations": 1,
+      "durationMs": 1,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "spec": {
+      "iterations": 1,
+      "durationMs": 82511,
+      "tokens": {
+        "in": 12,
+        "out": 8014,
+        "cacheRead": 223223,
+        "cacheWrite": 56159,
+        "cost": 0.6542446,
+        "turns": 8
+      }
+    },
+    "tests": {
+      "iterations": 1,
+      "durationMs": 177176,
+      "tokens": {
+        "in": 24,
+        "out": 18078,
+        "cacheRead": 757145,
+        "cacheWrite": 56922,
+        "cost": 0.9684610000000001,
+        "turns": 20
+      }
+    },
+    "red_check": {
+      "iterations": 1,
+      "durationMs": 4665,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "lock_tests": {
+      "iterations": 1,
+      "durationMs": 1,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "implement": {
+      "iterations": 1,
+      "durationMs": 85695,
+      "tokens": {
+        "in": 15,
+        "out": 7847,
+        "cacheRead": 400787,
+        "cacheWrite": 40374,
+        "cost": 0.5601494,
+        "turns": 13
+      }
+    },
+    "verify": {
+      "iterations": 1,
+      "durationMs": 1958,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "review": {
+      "iterations": 1,
+      "durationMs": 43967,
+      "tokens": {
+        "in": 19,
+        "out": 4671,
+        "cacheRead": 420054,
+        "cacheWrite": 71643,
+        "cost": 0.7506508,
+        "turns": 16
+      }
+    },
+    "docs": {
+      "iterations": 1,
+      "durationMs": 53319,
+      "tokens": {
+        "in": 15,
+        "out": 4833,
+        "cacheRead": 352179,
+        "cacheWrite": 34918,
+        "cost": 0.44649979999999995,
+        "turns": 11
+      }
+    },
+    "docs_check": {
+      "iterations": 1,
+      "durationMs": 1961,
+      "tokens": {
+        "in": 0,
+        "out": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 0
+      }
+    },
+    "learn": {
+      "iterations": 1,
+      "durationMs": 32809,
+      "tokens": {
+        "in": 8,
+        "out": 2633,
+        "cacheRead": 134773,
+        "cacheWrite": 18081,
+        "cost": 0.2242946,
+        "turns": 8
+      }
+    }
+  },
+  "stages": [
+    {
+      "seq": 1,
+      "stage": "scaffold",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "pass",
+      "durationMs": 1,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 2,
+      "stage": "spec",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 82511,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "analyst",
+          "ok": true,
+          "inputTokens": 12,
+          "outputTokens": 8014,
+          "cacheReadTokens": 223223,
+          "cacheWriteTokens": 56159,
+          "costUsd": 0.6542446,
+          "numTurns": 8,
+          "durationMs": 81779
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "stage": "tests",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 177176,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "test-writer",
+          "ok": true,
+          "inputTokens": 24,
+          "outputTokens": 18078,
+          "cacheReadTokens": 757145,
+          "cacheWriteTokens": 56922,
+          "costUsd": 0.9684610000000001,
+          "numTurns": 20,
+          "durationMs": 176429
+        }
+      ]
+    },
+    {
+      "seq": 4,
+      "stage": "red_check",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "pass",
+      "durationMs": 4665,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 5,
+      "stage": "lock_tests",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "pass",
+      "durationMs": 1,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 6,
+      "stage": "implement",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 85695,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "developer",
+          "ok": true,
+          "inputTokens": 15,
+          "outputTokens": 7847,
+          "cacheReadTokens": 400787,
+          "cacheWriteTokens": 40374,
+          "costUsd": 0.5601494,
+          "numTurns": 13,
+          "durationMs": 84951
+        }
+      ]
+    },
+    {
+      "seq": 7,
+      "stage": "verify",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "pass",
+      "durationMs": 1958,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 8,
+      "stage": "review",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "pass",
+      "durationMs": 43967,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "reviewer-rules",
+          "ok": true,
+          "inputTokens": 11,
+          "outputTokens": 3103,
+          "cacheReadTokens": 262241,
+          "cacheWriteTokens": 39976,
+          "costUsd": 0.4343602,
+          "numTurns": 11,
+          "durationMs": 43226
+        },
+        {
+          "agent": "reviewer-integrity",
+          "ok": true,
+          "inputTokens": 8,
+          "outputTokens": 1568,
+          "cacheReadTokens": 157813,
+          "cacheWriteTokens": 31667,
+          "costUsd": 0.3162906,
+          "numTurns": 5,
+          "durationMs": 25768
+        }
+      ]
+    },
+    {
+      "seq": 9,
+      "stage": "docs",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 53319,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "docs-writer",
+          "ok": true,
+          "inputTokens": 15,
+          "outputTokens": 4833,
+          "cacheReadTokens": 352179,
+          "cacheWriteTokens": 34918,
+          "costUsd": 0.44649979999999995,
+          "numTurns": 11,
+          "durationMs": 52596
+        }
+      ]
+    },
+    {
+      "seq": 10,
+      "stage": "docs_check",
+      "kind": "check",
+      "attempt": 0,
+      "outcome": "pass",
+      "durationMs": 1961,
+      "trigger": "auto",
+      "calls": []
+    },
+    {
+      "seq": 11,
+      "stage": "learn",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 32809,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "librarian",
+          "ok": true,
+          "inputTokens": 8,
+          "outputTokens": 2633,
+          "cacheReadTokens": 134773,
+          "cacheWriteTokens": 18081,
+          "costUsd": 0.2242946,
+          "numTurns": 8,
+          "durationMs": 32065
+        }
+      ]
+    }
+  ]
 }

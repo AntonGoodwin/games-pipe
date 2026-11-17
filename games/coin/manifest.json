@@ -1,0 +1,6 @@
+{
+  "id": "coin",
+  "title": "Монетка",
+  "server": "server/index.ts",
+  "ui": "ui/index.html"
+}
