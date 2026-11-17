@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Мины</title>
 <style>
-  :root { color-scheme: light dark; --accent: #2563eb; --win: #16a34a; --lose: #dc2626; --muted: #6b7280; }
+  :root { color-scheme: light dark; --accent: #2563eb; --win: #16a34a; --lose: #dc2626; --muted: #6b7280; --neutral: #d1d5db; --neutral-text: #111827; }
+  @media (prefers-color-scheme: dark) {
+    :root { --neutral: #4b5563; --neutral-text: #f9fafb; }
+  }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, sans-serif; background: Canvas; color: CanvasText; }
   main { max-width: 420px; margin: 0 auto; padding: 24px 16px; display: grid; gap: 16px; }
@@ -13,16 +16,26 @@
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .label { color: var(--muted); font-size: 14px; }
   .balance { font-size: 20px; font-weight: 600; }
-  input { font: inherit; padding: 8px; width: 100px; }
+  input, select { font: inherit; padding: 8px; }
+  input { width: 100px; }
   button { font: inherit; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--muted); background: transparent; color: inherit; cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
   #play { background: var(--accent); color: #fff; border-color: var(--accent); flex: 1; font-weight: 600; }
   #cashout { border-color: var(--win); color: var(--win); flex: 1; font-weight: 600; }
-  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; perspective: 600px; }
   .cell { aspect-ratio: 1; padding: 0; font-size: 22px; font-weight: 700; }
   .cell[data-cell-state="safe"] { background: var(--win); border-color: var(--win); color: #fff; opacity: 1; }
-  .cell[data-cell-state="mine"] { background: var(--lose); border-color: var(--lose); color: #fff; opacity: 1; }
-  .cell.hit { outline: 3px solid CanvasText; }
+  .cell[data-cell-state="hit"] { background: var(--lose); border-color: var(--lose); color: #fff; opacity: 1; }
+  .cell[data-cell-state="mine"] { background: var(--neutral); border-color: var(--neutral); color: var(--neutral-text); opacity: 1; }
+  /* Переворот открытой клетки: не дольше 300 мс, состояние клетки от анимации не зависит. */
+  .cell.flip { animation: cell-flip 250ms ease-out; }
+  @keyframes cell-flip {
+    from { transform: rotateY(90deg); }
+    to { transform: rotateY(0deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cell.flip { animation: none; }
+  }
   .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; }
   .stats b { display: block; font-size: 18px; }
   .result { text-align: center; min-height: 1.5em; font-weight: 600; }
@@ -40,6 +53,11 @@
     <label class="label" for="bet">Ставка</label>
     <input id="bet" data-testid="bet-input" type="number" step="0.01" min="1" max="10" value="1">
     <span class="label" id="limits"></span>
+  </div>
+
+  <div class="row">
+    <label class="label" for="mines">Мин на поле</label>
+    <select id="mines" data-testid="mines-input"></select>
   </div>
 
   <div class="row">
@@ -64,6 +82,9 @@
   'use strict';
 
   var CELLS = 25;
+  var MIN_MINES = 1;
+  var MAX_MINES = 24;
+  var DEFAULT_MINES = 3;
   var ERROR_TEXT = {
     BET_OUT_OF_LIMITS: 'Ставка вне лимитов',
     INSUFFICIENT_FUNDS: 'Недостаточно средств',
@@ -71,7 +92,19 @@
     INVALID_ACTION: 'Недопустимый ход',
     ROUND_ALREADY_OPEN: 'Раунд уже открыт',
     ROUND_CLOSED: 'Раунд уже завершён',
+    ROUND_NOT_FOUND: 'Раунд не найден',
     NETWORK_ERROR: 'Нет связи с сервером',
+  };
+  // Ошибки, которые только показываются: состояние раунда на сервере совпадает с экраном (D-028).
+  // После любой другой ошибки (ROUND_CLOSED, ROUND_NOT_FOUND, недоступность платёжного сервиса,
+  // INTERNAL_ERROR и т. п.) состояние берётся заново из open(). Код ошибки игра узнаёт только из
+  // ответа platform/sdk и сама к платёжному сервису не обращается.
+  var SHOW_ONLY_CODES = {
+    BET_OUT_OF_LIMITS: true,
+    INSUFFICIENT_FUNDS: true,
+    INVALID_PARAMS: true,
+    INVALID_ACTION: true,
+    NETWORK_ERROR: true,
   };
   var started = false;
 
@@ -84,6 +117,7 @@
     var root = q('game');
     var balanceEl = q('balance');
     var betInput = q('bet-input');
+    var minesInput = q('mines-input');
     var playBtn = q('play');
     var cashoutBtn = q('cashout');
     var multEl = q('multiplier');
@@ -95,6 +129,15 @@
     var mineCountEl = document.getElementById('mine-count');
     var grid = document.getElementById('grid');
 
+    for (var m = MIN_MINES; m <= MAX_MINES; m++) {
+      var opt = document.createElement('option');
+      opt.value = String(m);
+      opt.textContent = String(m);
+      if (m === DEFAULT_MINES) opt.selected = true;
+      minesInput.appendChild(opt);
+    }
+    minesInput.value = String(DEFAULT_MINES);
+
     var cells = [];
     for (var i = 0; i < CELLS; i++) {
       var b = document.createElement('button');
@@ -104,12 +147,14 @@
       b.setAttribute('data-cell', String(i));
       b.setAttribute('data-cell-state', 'hidden');
       b.setAttribute('aria-label', 'Клетка ' + (i + 1));
+      b.addEventListener('animationend', function (ev) { ev.currentTarget.classList.remove('flip'); });
       grid.appendChild(b);
       cells.push(b);
     }
 
-    // Текущий вид раунда: null — раунда нет.
+    // Текущий вид раунда: null — раунда нет. roundBet — ставка раунда из startRound/activeRound (D-025).
     var view = null;
+    var roundBet = null;
     var phase = 'idle';
     var busy = false;
 
@@ -122,32 +167,57 @@
       errorEl.textContent = code + ': ' + text;
     }
 
+    function cellStateOf(idx, revealed, mines, hit) {
+      if (revealed.indexOf(idx) >= 0) return 'safe';
+      if (idx === hit) return 'hit';
+      if (mines.indexOf(idx) >= 0) return 'mine';
+      return 'hidden';
+    }
+
+    // Переворот клетки, которая только что открылась. Состояние уже выставлено, анимация ничего не задерживает.
+    function flip(c) {
+      c.classList.remove('flip');
+      void c.offsetWidth;
+      c.classList.add('flip');
+    }
+
+    function cashoutLabel(revealed) {
+      if (phase === 'playing' && revealed.length >= 1 && typeof roundBet === 'number' && view && typeof view.multiplier === 'number') {
+        return 'Забрать $' + (Math.round(roundBet * view.multiplier * 100) / 100).toFixed(2);
+      }
+      return 'Забрать';
+    }
+
     function render() {
       root.setAttribute('data-state', phase);
       var revealed = (view && view.revealed) || [];
       var mines = (view && view.mines) || [];
-      var hit = view ? view.hit : null;
+      var hit = view && typeof view.hit === 'number' ? view.hit : null;
       cells.forEach(function (c, idx) {
-        var st = 'hidden';
-        if (revealed.indexOf(idx) >= 0) st = 'safe';
-        else if (mines.indexOf(idx) >= 0) st = 'mine';
+        var st = cellStateOf(idx, revealed, mines, hit);
+        var prev = c.getAttribute('data-cell-state');
         c.setAttribute('data-cell-state', st);
-        c.textContent = st === 'safe' ? '◆' : st === 'mine' ? '✹' : '';
-        c.classList.toggle('hit', idx === hit);
+        c.textContent = st === 'safe' ? '◆' : (st === 'mine' || st === 'hit') ? '✹' : '';
+        if (prev === 'hidden' && st !== 'hidden') flip(c);
+        else if (st === 'hidden') c.classList.remove('flip');
         c.disabled = busy || phase !== 'playing' || st !== 'hidden';
       });
       playBtn.disabled = busy || phase === 'playing';
       cashoutBtn.disabled = busy || phase !== 'playing' || revealed.length < 1;
+      cashoutBtn.textContent = cashoutLabel(revealed);
       betInput.disabled = busy || phase === 'playing';
+      minesInput.disabled = busy || phase === 'playing';
       multEl.textContent = view ? '×' + view.multiplier : '—';
       nextEl.textContent = view && typeof view.nextMultiplier === 'number' ? '×' + view.nextMultiplier : '—';
-      if (view && typeof view.mineCount === 'number') mineCountEl.textContent = String(view.mineCount);
+      mineCountEl.textContent = view && typeof view.mineCount === 'number' ? String(view.mineCount) : minesInput.value;
     }
 
     function applyRound(round) {
       if (!round) return;
       setBalance(round.balance);
+      if (typeof round.bet === 'number') roundBet = round.bet;
       view = round.view || null;
+      if (view && typeof view.mineCount === 'number') minesInput.value = String(view.mineCount);
       if (round.status === 'open') {
         phase = 'playing';
         payoutEl.textContent = '—';
@@ -158,17 +228,45 @@
       resultEl.firstChild.textContent = phase === 'lost' ? 'Мина! Выплата: ' : 'Выплата: ';
     }
 
+    function toIdle() {
+      view = null;
+      roundBet = null;
+      phase = 'idle';
+      payoutEl.textContent = '—';
+      resultEl.firstChild.textContent = 'Выплата: ';
+    }
+
+    // Пересинхронизация без перезагрузки страницы: состояние раунда и баланс — из повторного open() (D-028).
+    function resync() {
+      return sdk.open().then(function (info) {
+        setBalance(info && info.balance);
+        if (info && info.activeRound) applyRound(info.activeRound);
+        else toIdle();
+      }, function (e) {
+        var code = (e && e.code) || 'INTERNAL_ERROR';
+        errorEl.textContent += ' · ' + code + ': ' + (ERROR_TEXT[code] || 'Ошибка');
+      });
+    }
+
+    function onError(e) {
+      showError(e);
+      if (e && e.code && !SHOW_ONLY_CODES[e.code]) return resync();
+    }
+
     function call(promise) {
       busy = true;
       errorEl.textContent = '';
       render();
-      return promise.then(applyRound, showError).then(function () { busy = false; render(); });
+      return promise.then(applyRound, onError).then(function () { busy = false; render(); });
     }
+
+    minesInput.addEventListener('change', function () { if (!view) render(); });
 
     playBtn.addEventListener('click', function () {
       if (busy || phase === 'playing') return;
       var bet = Number(betInput.value);
-      call(sdk.startRound(bet, {}));
+      var mines = parseInt(minesInput.value, 10);
+      call(sdk.startRound(bet, { mines: mines }));
     });
 
     cashoutBtn.addEventListener('click', function () {

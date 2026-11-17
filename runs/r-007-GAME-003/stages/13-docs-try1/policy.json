@@ -1,0 +1,11 @@
+{
+  "root": "/Users/antonabashin/work/game_fabric/src/game-pipe",
+  "stage": "docs-writer",
+  "allow": [
+    "games/mines/README.md",
+    "games/mines/docs/**",
+    "games/mines/server/**",
+    "games/mines/ui/**"
+  ],
+  "deny": []
+}

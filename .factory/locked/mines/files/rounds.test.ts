@@ -1,4 +1,4 @@
-// Приёмочные тесты «Мин» через тестовую платформу (games/mines/spec.md, SC-1…SC-13).
+// Приёмочные тесты «Мин» через тестовую платформу (games/mines/spec.md, SC-1…SC-13, SC-16…SC-18).
 // Поведение проверяется снаружи: ответы startRound/action/open, баланс, журнал транзакций, коды ошибок.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import game from '../server/index.ts';
@@ -420,17 +420,29 @@ describe('Мины: раунды через платформу', () => {
     expect(p.transactions()).toHaveLength(2);
   });
 
-  it('SC-10: неверные params отклоняются до списания и не расходуют rng', () => {
+  it('SC-10: неверные params (в том числе mines вне 1…24 и не целое число) отклоняются до списания и не расходуют rng', () => {
     const p = platform([0.5, 0.75, 0.25]);
-    for (const params of [null, [], 'x', 5] as unknown[]) {
+    const bad: unknown[] = [
+      null,
+      [],
+      'x',
+      5,
+      { mines: 0 },
+      { mines: 25 },
+      { mines: -3 },
+      { mines: 2.5 },
+      { mines: '5' },
+      { mines: null },
+    ];
+    for (const params of bad) {
       expect(codeOf(() => p.startRound('mines', 1, params)), `params = ${JSON.stringify(params)}`).toBe('INVALID_PARAMS');
       expect(p.transactions()).toEqual([]);
       expect(p.balance()).toBe(100);
     }
     expect(p.open('mines').activeRound).toBeNull();
 
-    // Лишние поля отбрасываются (в том числе mines), rng не тронут: раунд идёт на 0.5, 0.75, 0.25.
-    const r = p.startRound('mines', 1, { mines: 10, extra: 1 });
+    // Объект без mines — значение по умолчанию 3, лишние поля отброшены; rng не тронут: мины 7, 12, 19.
+    const r = p.startRound('mines', 1, { extra: 1 });
     expect(r.status).toBe('open');
     expect(r.balance).toBe(99);
     expect(r.view).toEqual({ mineCount: 3, revealed: [], multiplier: 1, nextMultiplier: 1.11 });
@@ -439,14 +451,28 @@ describe('Мины: раунды через платформу', () => {
     expect(out.payout).toBe(0);
     expect(out.view).toMatchObject({ mineCount: 3, mines: [7, 12, 19], hit: 7, outcome: 'mine' });
     expect(out.balance).toBe(99);
+    expect(txList(p)).toEqual([
+      ['bet', 1, 99],
+      ['payout', 0, 99],
+    ]);
   });
 
-  it('SC-10: startRound без params — раунд открыт', () => {
+  it('SC-10: startRound без params — 3 мины по умолчанию', () => {
     const p = platform([0.5, 0.75, 0.25]);
     const r = p.startRound('mines', 1);
     expect(r.status).toBe('open');
     expect(r.balance).toBe(99);
     expect(r.view).toEqual({ mineCount: 3, revealed: [], multiplier: 1, nextMultiplier: 1.11 });
+  });
+
+  it('SC-10: явное { mines: 3 } — тот же раунд, что по умолчанию', () => {
+    const p = platform([0.5, 0.75, 0.25]);
+    const r = p.startRound('mines', 1, { mines: 3 });
+    expect(r.status).toBe('open');
+    expect(r.balance).toBe(99);
+    expect(r.view).toEqual({ mineCount: 3, revealed: [], multiplier: 1, nextMultiplier: 1.11 });
+    const out = p.action(r.roundId, R(19));
+    expect(out.view).toMatchObject({ mines: [7, 12, 19], hit: 19, outcome: 'mine' });
   });
 
   it('SC-11: ставка вне лимитов отклоняется до списания', () => {
@@ -506,6 +532,174 @@ describe('Мины: раунды через платформу', () => {
     expect(txList(p)).toEqual([
       ['bet', 2, 98],
       ['payout', 2.54, 100.54],
+    ]);
+  });
+
+  it('SC-16: игра с 5 минами — множитель от m = 5, cashout 2 × 1.55 = 3.1', () => {
+    const p = platform([0.5, 0.75, 0.25, 0, 0]); // мины 3, 4, 7, 12, 19 — ровно 5 вызовов rng
+    const r0 = p.startRound('mines', 2, { mines: 5 });
+    expect(r0.status).toBe('open');
+    expect(r0.balance).toBe(98);
+    // 98 × 25 / 20 = 122.5 → 1.23 (половина цента вверх)
+    expect(r0.view).toEqual({ mineCount: 5, revealed: [], multiplier: 1, nextMultiplier: 1.23 });
+    expectHidden(r0.view);
+
+    const r1 = p.action(r0.roundId, R(0));
+    expect(r1.status).toBe('open');
+    expect(r1.view).toEqual({ mineCount: 5, revealed: [0], multiplier: 1.23, nextMultiplier: 1.55 });
+
+    const r2 = p.action(r0.roundId, R(1));
+    expect(r2.status).toBe('open');
+    expect(r2.view).toEqual({ mineCount: 5, revealed: [0, 1], multiplier: 1.55, nextMultiplier: 1.98 });
+    expect(r2.balance).toBe(98);
+
+    const out = p.action(r0.roundId, CO);
+    expect(out.status).toBe('closed');
+    expect(out.payout).toBe(3.1);
+    expect(out.balance).toBe(101.1);
+    expect(out.view).toEqual({
+      mineCount: 5,
+      revealed: [0, 1],
+      multiplier: 1.55,
+      nextMultiplier: null,
+      mines: [3, 4, 7, 12, 19],
+      hit: null,
+      outcome: 'cashout',
+    });
+    expect(p.balance()).toBe(101.1);
+    expect(txList(p)).toEqual([
+      ['bet', 2, 98],
+      ['payout', 3.1, 101.1],
+    ]);
+  });
+
+  it('SC-16: при 5 минах клетки 3 и 4 — мины (расставлены 4-м и 5-м вызовом rng)', () => {
+    for (const mine of [3, 4]) {
+      const p = platform([0.5, 0.75, 0.25, 0, 0]);
+      const r0 = p.startRound('mines', 2, { mines: 5, extra: 1 });
+      p.action(r0.roundId, R(0));
+      const r = p.action(r0.roundId, R(mine));
+      expect(r.status, `клетка ${mine}`).toBe('closed');
+      expect(r.payout).toBe(0);
+      expect(r.balance).toBe(98);
+      expect(r.view).toEqual({
+        mineCount: 5,
+        revealed: [0],
+        multiplier: 1.23,
+        nextMultiplier: null,
+        mines: [3, 4, 7, 12, 19],
+        hit: mine,
+        outcome: 'mine',
+      });
+    }
+  });
+
+  it('SC-17: одна мина — все 24 безопасные клетки, раунд закрывается сам с выплатой 1 × 24.5', () => {
+    const p = platform([0.5]); // мина 12, ровно 1 вызов rng
+    const r0 = p.startRound('mines', 1, { mines: 1 });
+    expect(r0.status).toBe('open');
+    expect(r0.balance).toBe(99);
+    expect(r0.view).toEqual({ mineCount: 1, revealed: [], multiplier: 1, nextMultiplier: 1.02 });
+
+    const a = p.action(r0.roundId, R(0));
+    expect(a.view).toEqual({ mineCount: 1, revealed: [0], multiplier: 1.02, nextMultiplier: 1.07 });
+    const b = p.action(r0.roundId, R(1));
+    expect(b.view).toEqual({ mineCount: 1, revealed: [0, 1], multiplier: 1.07, nextMultiplier: 1.11 });
+
+    const rest = [...Array.from({ length: 10 }, (_, i) => i + 2), ...Array.from({ length: 11 }, (_, i) => i + 13)]; // 2…11, 13…23
+    let last = b;
+    for (const cell of rest) {
+      last = p.action(r0.roundId, R(cell));
+      // На 22-й клетке раунд с одной миной ещё открыт (безопасных 24, а не 22).
+      expect(last.status, `после клетки ${cell}`).toBe('open');
+      expect(last.payout).toBeNull();
+      expectHidden(last.view);
+    }
+    expect(last.view).toEqual({
+      mineCount: 1,
+      revealed: [0, 1, ...rest],
+      multiplier: 12.25,
+      nextMultiplier: 24.5,
+    });
+    expect(last.balance).toBe(99);
+    expect(p.transactions()).toHaveLength(1);
+
+    const fin = p.action(r0.roundId, R(24));
+    expect(fin.status).toBe('closed');
+    expect(fin.payout).toBe(24.5);
+    expect(fin.balance).toBe(123.5);
+    expect(fin.view).toEqual({
+      mineCount: 1,
+      revealed: [0, 1, ...rest, 24],
+      multiplier: 24.5,
+      nextMultiplier: null,
+      mines: [12],
+      hit: null,
+      outcome: 'cleared',
+    });
+    expect((fin.view as any).revealed).toHaveLength(24);
+    expect(txList(p)).toEqual([
+      ['bet', 1, 99],
+      ['payout', 24.5, 123.5],
+    ]);
+    expect(p.open('mines').activeRound).toBeNull();
+    expect(codeOf(() => p.action(r0.roundId, R(12)))).toBe('ROUND_CLOSED');
+    expect(p.balance()).toBe(123.5);
+  });
+
+  it('SC-18: 24 мины — cashout невозможен, единственная безопасная клетка платит 3 × 24.5, мина — 0', () => {
+    const p = platform([...Array(24).fill(0.9999), ...Array(24).fill(0)]);
+    const minesA = [...Array.from({ length: 23 }, (_, i) => i), 24]; // 0…22, 24
+    const minesB = Array.from({ length: 24 }, (_, i) => i); // 0…23
+
+    const a = p.startRound('mines', 3, { mines: 24 });
+    expect(a.status).toBe('open');
+    expect(a.balance).toBe(97);
+    expect(a.view).toEqual({ mineCount: 24, revealed: [], multiplier: 1, nextMultiplier: 24.5 });
+    expectHidden(a.view);
+
+    expect(codeOf(() => p.action(a.roundId, CO))).toBe('INVALID_ACTION');
+    expect(p.balance()).toBe(97);
+    expect(p.transactions()).toHaveLength(1);
+    expect(p.open('mines').activeRound?.roundId).toBe(a.roundId);
+
+    const a1 = p.action(a.roundId, R(23));
+    expect(a1.status).toBe('closed');
+    expect(a1.payout).toBe(73.5);
+    expect(a1.balance).toBe(170.5);
+    expect(a1.view).toEqual({
+      mineCount: 24,
+      revealed: [23],
+      multiplier: 24.5,
+      nextMultiplier: null,
+      mines: minesA,
+      hit: null,
+      outcome: 'cleared',
+    });
+
+    // Первый раунд израсходовал ровно 24 числа: второй идёт на 24 нулях.
+    const b = p.startRound('mines', 1, { mines: 24 });
+    expect(b.status).toBe('open');
+    expect(b.balance).toBe(169.5);
+    const b1 = p.action(b.roundId, R(0));
+    expect(b1.status).toBe('closed');
+    expect(b1.payout).toBe(0);
+    expect(b1.balance).toBe(169.5);
+    expect(b1.view).toEqual({
+      mineCount: 24,
+      revealed: [],
+      multiplier: 1,
+      nextMultiplier: null,
+      mines: minesB,
+      hit: 0,
+      outcome: 'mine',
+    });
+
+    expect(txList(p)).toEqual([
+      ['bet', 3, 97],
+      ['payout', 73.5, 170.5],
+      ['bet', 1, 169.5],
+      ['payout', 0, 169.5],
     ]);
   });
 });
