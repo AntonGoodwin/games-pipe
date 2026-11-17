@@ -6,7 +6,7 @@
 //   node factory/run.ts decide coin D-003 "new value"    change one of the pipeline's decisions
 //   node factory/run.ts stage GAME-001 review            run one stage by hand (classic SDLC)
 //   node factory/run.ts resume GAME-001                  continue a stopped/manual task
-//   node factory/run.ts status | summary
+//   node factory/run.ts games | status | summary
 import fs from 'node:fs';
 import YAML from 'yaml';
 import { runAiStage, writablePaths, type AiCall } from './lib/ai-stages.ts';
@@ -491,6 +491,21 @@ async function main(): Promise<void> {
     }
     case 'status': {
       for (const t of listTasks()) console.log(`${t.data.id.padEnd(9)} ${t.data.status.padEnd(12)} ${t.data.phase.padEnd(14)} ${t.data.title}${t.data.needs_human?.length ? `  ⚑ ждёт решения: ${t.data.needs_human.join(', ')}` : ''}`);
+      break;
+    }
+    case 'games': {
+      // Game ids are folder names under games/; the same id is used by feedback and decide.
+      const ids = exists('games') ? fs.readdirSync(abs('games')).filter((d) => exists(`games/${d}/manifest.json`)).sort() : [];
+      if (!ids.length) console.log('Игр пока нет. Создать: node factory/run.ts new specs/<game>.md');
+      for (const id of ids) {
+        const manifest = JSON.parse(readText(`games/${id}/manifest.json`)) as { title?: string };
+        const tasks = gameTasks(id);
+        const tests = listFiles(`games/${id}/tests`).filter((f) => f.endsWith('.test.ts')).map((f) => readText(f).match(/^\s*(?:it|test)(?:\.\w+)?\(/gm)?.length ?? 0).reduce((a, b) => a + b, 0);
+        const decisions = exists(`decisions/${id}.md`) ? (readText(`decisions/${id}.md`).match(/^## D-\d+/gm) ?? []).length : 0;
+        const waiting = tasks.flatMap((t) => t.data.needs_human ?? []);
+        console.log(`${id.padEnd(10)} ${(manifest.title ?? id).padEnd(16)} тестов ${String(tests).padEnd(4)} решений ${String(decisions).padEnd(4)} задачи ${tasks.map((t) => `${t.data.id}(${t.data.status})`).join(', ')}${waiting.length ? `  ⚑ ждёт решения: ${waiting.join(', ')}` : ''}`);
+      }
+      if (ids.length) console.log(`\nURL игры: http://localhost:4000/games/<id>/ · доработка: feedback <id> <файл> · решение: decide <id> D-NNN "<значение>"`);
       break;
     }
     case 'summary':

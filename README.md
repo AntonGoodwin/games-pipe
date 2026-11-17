@@ -14,6 +14,7 @@
 | Изменить решение пайплайна | `/game-decide mines D-002 "5 мин"` | `node factory/run.ts decide mines D-002 "5 мин"` |
 | Один этап вручную | `/game-stage GAME-001 review` | `node factory/run.ts stage GAME-001 review` |
 | Продолжить задачу | `/game-resume GAME-001` | `node factory/run.ts resume GAME-001` |
+| Список игр (id для feedback/decide) | `/game-list` | `node factory/run.ts games` |
 | Статус и метрики | `/game-status` | `node factory/run.ts status` · `summary` |
 | Запустить приложение | `/app-start` | `pnpm start` → http://localhost:4000 |
 

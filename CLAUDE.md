@@ -5,6 +5,6 @@
 - Конвенции: [docs/conventions.md](docs/conventions.md) — обязательны.
 - Оркестратор: `factory/run.ts`, конвейеры: `factory/pipeline.yaml`. Этапами управляет код; агент работает внутри этапа и не выбирает следующий.
 - Задачи: `local-jira/`. Решения: `decisions/`. База знаний: `kb/` (руками не редактируется). Запуски и метрики: `runs/`.
-- Команды для человека — slash-команды в `.claude/commands/` (`/game-new`, `/game-feedback`, `/game-decide`, `/game-stage`, `/game-resume`, `/game-status`, `/platform-build`, `/app-start`).
+- Команды для человека — slash-команды в `.claude/commands/` (`/game-new`, `/game-list`, `/game-feedback`, `/game-decide`, `/game-stage`, `/game-resume`, `/game-status`, `/platform-build`, `/app-start`).
 
 Если ты агент этапа: пиши только в разрешённые этапу пути (остальное заблокировано хуком и откатывается оркестратором), не задавай вопросов человеку, недостающее оформляй допущением в поле `decisions`.
