@@ -1,0 +1,17 @@
+{
+  "locked_at": "2026-11-17T13:33:17.410Z",
+  "task": "PLAT-001",
+  "hashes": {
+    "platform/tests/core-http.test.ts": "37acd56dbed6908084ef2109ad150a1537056c44eadcc5e25877afd132ca7436",
+    "platform/tests/fixtures/t-flip/manifest.json": "7da19a3cc281015dc6c05340a58e0ba70d144d928c7b3452a2dd58c00722e662",
+    "platform/tests/fixtures/t-flip/server/index.js": "d4e04de48e9b717888ea8ae647109cb0bb23e61b4fac7a57259df85310a07728",
+    "platform/tests/fixtures/t-flip/ui/index.html": "ac253947c573f7073c676741f3fd2dce7fe5d86d64769b9c4eea0e80ee15fa33",
+    "platform/tests/fixtures/t-steps/manifest.json": "def13840569cae136cddbdcd638e23045ada4782b490ee5ac835b44c5907b8c8",
+    "platform/tests/fixtures/t-steps/server/index.js": "c87df6b4bc4299d29f6fa9a593b62a0e65dc4a686e9ffb5611480f1d203f32bd",
+    "platform/tests/fixtures/t-steps/ui/index.html": "07c421e14d15a6cfa5725f3349cd0862109c06e38bf2ada977b037b7ca0fe3c2",
+    "platform/tests/helpers.ts": "36f5b82a76a74abe3ef292bc42e45851c02535b498411878636cf8547236999a",
+    "platform/tests/rounds.test.ts": "d13624b3d0d4fea930c2b516e5439435377124be6a453631ce06c48ab0a909cc",
+    "platform/tests/sdk.test.ts": "3b68c4d92231a22fc3eeb5ea0e5e3e8732d7b0acb9964c0411efa5c07fe60953",
+    "platform/tests/wallet.test.ts": "6e7257a5460d79bac1050b6a7d379a88bce6e3b9f873964c2feebed79b546317"
+  }
+}

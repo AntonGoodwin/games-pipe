@@ -3,13 +3,20 @@ id: PLAT-001
 status: in-progress
 rounds:
   spec: 1
+  tests: 1
+  implement: 4
+  review: 3
+  learn: 1
 runs:
   - r-001-PLAT-001
+  - r-002-PLAT-001
 type: platform
 pipeline: platform
 scope: platform
 title: Платформа
-phase: tests
+phase: learn
+review_pending:
+  - reviewer-integrity
 ---
 # PLAT-001: Платформа
 
@@ -102,3 +109,25 @@ export class GameError extends Error { code: string }
 - 15:58 запуск [[runs/r-001-PLAT-001/report|r-001-PLAT-001]] (auto)
 - 16:00 spec: новые допущения D-001, D-002, D-003, D-004, D-005, D-006, D-007, D-008, D-009, D-010, D-011, D-012, D-013, D-014 → [[decisions/platform]]
 - 16:00 spec → done (2m13s)
+- 16:26 запуск [[runs/r-002-PLAT-001/report|r-002-PLAT-001]] (auto) с этапа tests
+- 16:33 tests: новые допущения D-015, D-016, D-017, D-018, D-019, D-020 → [[decisions/platform]]
+- 16:33 tests → done (6m41s)
+- 16:33 coverage_check → pass (1s)
+- 16:33 lock_tests → pass (0s)
+- 16:40 implement: новые допущения D-021, D-022, D-023, D-024, D-025, D-026, D-027, D-028, D-029, D-030, D-031, D-032, D-033 → [[decisions/platform]]
+- 16:40 implement → done (6m46s)
+- 16:40 verify → pass (2s)
+- 16:41 review → fail (1m24s)
+- 16:45 implement: новые допущения D-034, D-035, D-036, D-037, D-038, D-039, D-040, D-041, D-042 → [[decisions/platform]]
+- 16:45 implement → done (3m58s)
+- 16:45 verify → pass (2s)
+- 16:47 review → fail (2m05s)
+- 16:50 implement: новые допущения D-043, D-044, D-045 → [[decisions/platform]]
+- 16:50 implement → done (3m03s)
+- 16:50 verify → pass (7s)
+- 16:52 review → fail (2m07s)
+- 16:55 implement: новые допущения D-046, D-047, D-048, D-049 → [[decisions/platform]]
+- 16:55 implement → done (3m07s)
+- 16:56 verify → pass (2s)
+- 16:56 ⛔ остановлено: лимит попыток этапа «review» исчерпан (3). Последняя проблема:
+- 16:56 learn → done (41s)
