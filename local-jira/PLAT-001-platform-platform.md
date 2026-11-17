@@ -1,13 +1,15 @@
 ---
 id: PLAT-001
-status: new
-rounds: {}
-runs: []
+status: in-progress
+rounds:
+  spec: 1
+runs:
+  - r-001-PLAT-001
 type: platform
 pipeline: platform
 scope: platform
 title: Платформа
-phase: spec
+phase: tests
 ---
 # PLAT-001: Платформа
 
@@ -97,4 +99,6 @@ export class GameError extends Error { code: string }
 - Решения: [[decisions/platform]]
 
 ## Журнал
-
+- 15:58 запуск [[runs/r-001-PLAT-001/report|r-001-PLAT-001]] (auto)
+- 16:00 spec: новые допущения D-001, D-002, D-003, D-004, D-005, D-006, D-007, D-008, D-009, D-010, D-011, D-012, D-013, D-014 → [[decisions/platform]]
+- 16:00 spec → done (2m13s)

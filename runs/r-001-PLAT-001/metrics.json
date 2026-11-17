@@ -1,0 +1,56 @@
+{
+  "run": "r-001-PLAT-001",
+  "task": "PLAT-001",
+  "pipeline": "platform",
+  "trigger": "auto",
+  "started": "2026-11-17T12:58:19.837Z",
+  "durationMs": 133115,
+  "status": "in-progress",
+  "stopReason": null,
+  "totals": {
+    "in": 10,
+    "out": 14560,
+    "cacheRead": 171605,
+    "cacheWrite": 51073,
+    "cost": 0.7341449999999999,
+    "turns": 7
+  },
+  "byStage": {
+    "spec": {
+      "iterations": 1,
+      "durationMs": 133060,
+      "tokens": {
+        "in": 10,
+        "out": 14560,
+        "cacheRead": 171605,
+        "cacheWrite": 51073,
+        "cost": 0.7341449999999999,
+        "turns": 7
+      }
+    }
+  },
+  "stages": [
+    {
+      "seq": 1,
+      "stage": "spec",
+      "kind": "ai",
+      "attempt": 1,
+      "outcome": "done",
+      "durationMs": 133060,
+      "trigger": "auto",
+      "calls": [
+        {
+          "agent": "analyst",
+          "ok": true,
+          "inputTokens": 10,
+          "outputTokens": 14560,
+          "cacheReadTokens": 171605,
+          "cacheWriteTokens": 51073,
+          "costUsd": 0.7341449999999999,
+          "numTurns": 7,
+          "durationMs": 132003
+        }
+      ]
+    }
+  ]
+}
