@@ -138,7 +138,9 @@ function boundaryViolations(c: CheckCtx): string[] {
       if (target.startsWith('platform/') && !target.startsWith('platform/sdk/')) out.push(`${f}: импорт "${spec}" — игре доступен только platform/sdk`);
       if (target.startsWith('games/') && !target.startsWith(`${c.dir}/`)) out.push(`${f}: импорт "${spec}" — игра не может зависеть от другой игры`);
     }
-    if (/wallet|:4001\b/i.test(text)) out.push(`${f}: прямое обращение к кошельку партнёра запрещено — баланс только через platform/sdk`);
+    // Real wallet access only: its port or its endpoints as URL paths. Words like the platform error
+    // code WALLET_UNAVAILABLE are legitimate (false positive found in r-007, KB-009).
+    if (/:4001\b|['"`]\/(?:bet|payout|balance)\b/.test(text)) out.push(`${f}: прямое обращение к кошельку партнёра запрещено — баланс только через platform/sdk`);
   }
   return out;
 }
