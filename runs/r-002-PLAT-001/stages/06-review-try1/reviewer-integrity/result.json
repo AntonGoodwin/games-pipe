@@ -54,7 +54,6 @@
     "outputTokens": 6267,
     "cacheReadTokens": 284201,
     "cacheWriteTokens": 67070,
-    "costUsd": 0.7187922,
     "numTurns": 17,
     "durationMs": 77908
   }

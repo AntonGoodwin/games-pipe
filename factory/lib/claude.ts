@@ -10,7 +10,6 @@ export interface AgentUsage {
   outputTokens: number;
   cacheReadTokens: number;
   cacheWriteTokens: number;
-  costUsd: number;
   numTurns: number;
   durationMs: number;
 }
@@ -46,7 +45,7 @@ const BASH_TOOLS = [
 ];
 
 function emptyUsage(): AgentUsage {
-  return { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, costUsd: 0, numTurns: 0, durationMs: 0 };
+  return { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, numTurns: 0, durationMs: 0 };
 }
 
 export async function runAgent(call: AgentCall): Promise<AgentResult> {
@@ -144,7 +143,6 @@ export async function runAgent(call: AgentCall): Promise<AgentResult> {
       usage.outputTokens = u.output_tokens ?? 0;
       usage.cacheReadTokens = u.cache_read_input_tokens ?? 0;
       usage.cacheWriteTokens = u.cache_creation_input_tokens ?? 0;
-      usage.costUsd = (r.total_cost_usd as number) ?? 0;
       usage.numTurns = (r.num_turns as number) ?? 0;
       usage.durationMs = (r.duration_ms as number) ?? usage.durationMs;
       const output = (r.structured_output ?? null) as Record<string, unknown> | null;

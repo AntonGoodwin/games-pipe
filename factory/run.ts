@@ -66,7 +66,7 @@ interface StageMetric {
   outcome: string;
   durationMs: number;
   trigger: 'auto' | 'manual';
-  calls: Array<{ agent: string; ok: boolean; inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number; costUsd: number; numTurns: number; durationMs: number }>;
+  calls: Array<{ agent: string; ok: boolean; inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number; numTurns: number; durationMs: number }>;
 }
 
 interface Run {
@@ -334,10 +334,10 @@ const e2eSkipLearn = (): boolean => process.env.FACTORY_SKIP_LEARN === '1';
 
 // ---------- metrics & reports ----------
 
-function totals(ms: StageMetric[]): { in: number; out: number; cacheRead: number; cacheWrite: number; cost: number; turns: number } {
-  const t = { in: 0, out: 0, cacheRead: 0, cacheWrite: 0, cost: 0, turns: 0 };
+function totals(ms: StageMetric[]): { in: number; out: number; cacheRead: number; cacheWrite: number; turns: number } {
+  const t = { in: 0, out: 0, cacheRead: 0, cacheWrite: 0, turns: 0 };
   for (const m of ms) for (const c of m.calls) {
-    t.in += c.inputTokens; t.out += c.outputTokens; t.cacheRead += c.cacheReadTokens; t.cacheWrite += c.cacheWriteTokens; t.cost += c.costUsd; t.turns += c.numTurns;
+    t.in += c.inputTokens; t.out += c.outputTokens; t.cacheRead += c.cacheReadTokens; t.cacheWrite += c.cacheWriteTokens; t.turns += c.numTurns;
   }
   return t;
 }
@@ -371,8 +371,7 @@ function writeReport(run: Run): void {
 Задача: ${taskLink(run.task)} · конвейер **${run.task.data.pipeline}** · запуск: ${run.trigger}
 Итог: **${run.task.data.status}**${run.stopReason ? `\n\nПричина остановки:\n\n\`\`\`\n${truncate(run.stopReason, 3000)}\n\`\`\`` : ''}
 
-Время пайплайна: **${fmtMs(Date.now() - run.started)}** · AI-шагов (turns): ${t.turns} · токены вход/выход: ${k(t.in + t.cacheRead + t.cacheWrite)} / ${k(t.out)} (из них кэш: чтение ${k(t.cacheRead)}, запись ${k(t.cacheWrite)}) · условная стоимость: $${t.cost.toFixed(2)}
-
+Время пайплайна: **${fmtMs(Date.now() - run.started)}** · AI-шагов (turns): ${t.turns} · токены вход/выход: ${k(t.in + t.cacheRead + t.cacheWrite)} / ${k(t.out)} (из них кэш: чтение ${k(t.cacheRead)}, запись ${k(t.cacheWrite)})
 ## Этапы
 
 | Этап | Тип | Итераций | Время | Токены in/out | Исходы |
@@ -416,9 +415,9 @@ function writeSummary(): void {
     if (!exists(p)) continue;
     const m = JSON.parse(readText(p)) as { task: string; pipeline: string; trigger: string; status: string; durationMs: number; totals: ReturnType<typeof totals>; byStage: Record<string, { iterations: number }> };
     const iters = Object.entries(m.byStage).filter(([s]) => ['spec', 'spec_update', 'tests', 'tests_update', 'implement', 'review', 'docs', 'dispute'].includes(s)).map(([s, v]) => `${s}×${v.iterations}`).join(' ');
-    rows.push(`| [[runs/${d}/report\\|${d}]] | ${m.task} | ${m.pipeline} | ${m.trigger} | ${m.status} | ${fmtMs(m.durationMs)} | ${iters} | ${k(m.totals.in + m.totals.cacheRead + m.totals.cacheWrite)} / ${k(m.totals.out)} | $${m.totals.cost.toFixed(2)} |`);
+    rows.push(`| [[runs/${d}/report\\|${d}]] | ${m.task} | ${m.pipeline} | ${m.trigger} | ${m.status} | ${fmtMs(m.durationMs)} | ${iters} | ${k(m.totals.in + m.totals.cacheRead + m.totals.cacheWrite)} / ${k(m.totals.out)} |`);
   }
-  writeText('runs/summary.md', `# Сводка по запускам\n\nОбновляется оркестратором после каждого запуска.\n\n| Запуск | Задача | Конвейер | Кто запустил | Итог | Время | Итерации AI-этапов | Токены in/out | Стоимость* |\n|---|---|---|---|---|---|---|---|---|\n${rows.join('\n')}\n\n\\* условная стоимость по прайсу API; при работе через подписку не списывается.\n`);
+  writeText('runs/summary.md', `# Сводка по запускам\n\nОбновляется оркестратором после каждого запуска.\n\n| Запуск | Задача | Конвейер | Кто запустил | Итог | Время | Итерации AI-этапов | Токены in/out |\n|---|---|---|---|---|---|---|---|\n${rows.join('\n')}\n`);
 }
 
 // ---------- CLI ----------

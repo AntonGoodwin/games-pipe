@@ -18,7 +18,7 @@ I didn't edit the code or the README, so the tsc and test results shouldn't chan
 Assumption (decisions): I did not try to get around the write ban on local-jira/. The broken link is treated as an orchestrator defect and handed to whoever maintains factory/.
 ```
 
-Время пайплайна: **4m18s** · AI-шагов (turns): 54 · токены вход/выход: 1822.0k / 21.2k (из них кэш: чтение 1619.0k, запись 202.9k) · условная стоимость: $2.37
+Время пайплайна: **4m18s** · AI-шагов (turns): 54 · токены вход/выход: 1822.0k / 21.2k (из них кэш: чтение 1619.0k, запись 202.9k)
 
 ## Этапы
 

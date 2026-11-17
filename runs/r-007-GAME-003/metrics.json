@@ -12,7 +12,6 @@
     "out": 115228,
     "cacheRead": 4595436,
     "cacheWrite": 532741,
-    "cost": 7.4861992,
     "turns": 122
   },
   "byStage": {
@@ -24,7 +23,6 @@
         "out": 1705,
         "cacheRead": 33040,
         "cacheWrite": 48334,
-        "cost": 0.427396,
         "turns": 5
       }
     },
@@ -36,7 +34,6 @@
         "out": 25868,
         "cacheRead": 338075,
         "cacheWrite": 55430,
-        "cost": 1.028471,
         "turns": 9
       }
     },
@@ -48,7 +45,6 @@
         "out": 41701,
         "cacheRead": 1125314,
         "cacheWrite": 118964,
-        "cost": 2.0109387999999995,
         "turns": 32
       }
     },
@@ -60,7 +56,6 @@
         "out": 0,
         "cacheRead": 0,
         "cacheWrite": 0,
-        "cost": 0,
         "turns": 0
       }
     },
@@ -72,7 +67,6 @@
         "out": 0,
         "cacheRead": 0,
         "cacheWrite": 0,
-        "cost": 0,
         "turns": 0
       }
     },
@@ -84,7 +78,6 @@
         "out": 23716,
         "cacheRead": 1605067,
         "cacheWrite": 122557,
-        "cost": 1.7759813999999998,
         "turns": 33
       }
     },
@@ -96,7 +89,6 @@
         "out": 0,
         "cacheRead": 0,
         "cacheWrite": 0,
-        "cost": 0,
         "turns": 0
       }
     },
@@ -108,7 +100,6 @@
         "out": 7959,
         "cacheRead": 678129,
         "cacheWrite": 102086,
-        "cost": 1.1116058,
         "turns": 17
       }
     },
@@ -120,7 +111,6 @@
         "out": 10342,
         "cacheRead": 714864,
         "cacheWrite": 64157,
-        "cost": 0.8631487999999999,
         "turns": 22
       }
     },
@@ -132,7 +122,6 @@
         "out": 0,
         "cacheRead": 0,
         "cacheWrite": 0,
-        "cost": 0,
         "turns": 0
       }
     },
@@ -144,7 +133,6 @@
         "out": 3937,
         "cacheRead": 100947,
         "cacheWrite": 21213,
-        "cost": 0.2686574,
         "turns": 4
       }
     }
@@ -166,7 +154,6 @@
           "outputTokens": 1705,
           "cacheReadTokens": 33040,
           "cacheWriteTokens": 48334,
-          "costUsd": 0.427396,
           "numTurns": 5,
           "durationMs": 19499
         }
@@ -188,7 +175,6 @@
           "outputTokens": 25868,
           "cacheReadTokens": 338075,
           "cacheWriteTokens": 55430,
-          "costUsd": 1.028471,
           "numTurns": 9,
           "durationMs": 217758
         }
@@ -210,7 +196,6 @@
           "outputTokens": 38504,
           "cacheReadTokens": 776100,
           "cacheWriteTokens": 91003,
-          "costUsd": 1.6534039999999997,
           "numTurns": 22,
           "durationMs": 324184
         }
@@ -242,7 +227,6 @@
           "outputTokens": 3197,
           "cacheReadTokens": 349214,
           "cacheWriteTokens": 27961,
-          "costUsd": 0.3575348,
           "numTurns": 10,
           "durationMs": 37906
         }
@@ -284,7 +268,6 @@
           "outputTokens": 18020,
           "cacheReadTokens": 1084582,
           "cacheWriteTokens": 94312,
-          "costUsd": 1.3319123999999998,
           "numTurns": 18,
           "durationMs": 168566
         }
@@ -316,7 +299,6 @@
           "outputTokens": 5696,
           "cacheReadTokens": 520485,
           "cacheWriteTokens": 28245,
-          "costUsd": 0.444069,
           "numTurns": 15,
           "durationMs": 76701
         }
@@ -348,7 +330,6 @@
           "outputTokens": 4775,
           "cacheReadTokens": 324884,
           "cacheWriteTokens": 50807,
-          "costUsd": 0.5669888000000001,
           "numTurns": 8,
           "durationMs": 62634
         },
@@ -359,7 +340,6 @@
           "outputTokens": 3184,
           "cacheReadTokens": 353245,
           "cacheWriteTokens": 51279,
-          "costUsd": 0.544617,
           "numTurns": 9,
           "durationMs": 45763
         }
@@ -381,7 +361,6 @@
           "outputTokens": 10342,
           "cacheReadTokens": 714864,
           "cacheWriteTokens": 64157,
-          "costUsd": 0.8631487999999999,
           "numTurns": 22,
           "durationMs": 105703
         }
@@ -413,7 +392,6 @@
           "outputTokens": 3937,
           "cacheReadTokens": 100947,
           "cacheWriteTokens": 21213,
-          "costUsd": 0.2686574,
           "numTurns": 4,
           "durationMs": 44894
         }
