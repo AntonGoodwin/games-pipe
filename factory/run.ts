@@ -220,7 +220,8 @@ async function execStage(run: Run, stage: string): Promise<string> {
     }
     if (r.reviewFailed) task.data.review_pending = r.reviewFailed.length ? r.reviewFailed : undefined;
     if (r.dispute) run.disputes.push(`${r.dispute.test}: ${r.dispute.reason}`);
-    if (stage === 'dispute' && outcome === 'rejected') registerRejectedDispute(run, details);
+    // The instruction becomes this stage's details, so it is what the next (implement) stage receives.
+    if (stage === 'dispute' && outcome === 'rejected') details = registerRejectedDispute(run, details);
     if (r.kbUpserts) {
       const kbBefore = `.factory/tmp/kb-before-${run.id}`;
       fs.rmSync(abs(kbBefore), { recursive: true, force: true });
@@ -251,11 +252,12 @@ async function execStage(run: Run, stage: string): Promise<string> {
   return outcome;
 }
 
-function registerRejectedDispute(run: Run, reason: string): void {
+/** Records the rejected dispute as a pending human decision and returns the instruction for the developer. */
+function registerRejectedDispute(run: Run, reason: string): string {
   const d = run.disputes[run.disputes.length - 1] ?? 'спор по тесту';
   const ids = addDisputeDecision(run, d, reason);
   run.task.data.needs_human = [...(run.task.data.needs_human ?? []), ...ids];
-  run.feedback = `Агент тестирования отклонил спор: ${reason}\nПо правилу «по умолчанию прав тест» реализуй поведение из теста. Спор записан в журнал решений как ${ids.join(', ')}; человек может изменить это позже.`;
+  return `Агент тестирования отклонил спор по тесту ${d}.\nОбоснование: ${reason}\n\nПо правилу «по умолчанию прав тест» реализуй поведение из теста; повторно спорить по этому тесту не нужно. Спор записан в журнал решений как ${ids.join(', ')}; человек может изменить это позже.`;
 }
 
 function addDisputeDecision(run: Run, dispute: string, reason: string): string[] {
